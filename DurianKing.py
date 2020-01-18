@@ -68,8 +68,8 @@ def join(update, context):
     chat_id = update.effective_message.chat.id
 
     if query.data == '1':
-        if db.check_user(query.from_user.id, chat_id) == 0:
-            db.add_user(query.from_user.id, query.from_user.first_name, None, 0, chat_id)
+        if not db.check_user(query.from_user.id, chat_id):
+            db.add_user(query.from_user.id, query.from_user.first_name, "None", 0, chat_id)
             print("user successfully added")
             context.bot.send_message(
                 chat_id=chat_id,
@@ -90,10 +90,6 @@ def join(update, context):
     else: 
         print("error with join button")
     
-    db.get_users(chat_id)
-    db.get_usernames_list(chat_id)
-
-
 ######### Handlers ###########
 #handler for /start
 updater.dispatcher.add_handler(
