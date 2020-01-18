@@ -90,7 +90,7 @@ def start_game(update, context):
         print("clear database")
 
         #send them to a PM where we will set up!
-        keyboard_callback = [[InlineKeyboardButton("Join", callback_data='1')], [InlineKeyboardButton("Allow Bot Messages", url="t.me/claire_game_test_bot")]]
+        keyboard_callback = [[InlineKeyboardButton("Join", callback_data='1')]]
         reply_markup_callback = InlineKeyboardMarkup(keyboard_callback)
 
          #send gif(?) and message upon starting game 
@@ -102,41 +102,52 @@ def start_game(update, context):
         )
 
 
+#gameplay function
+def gamePlay (update, context, chat_id):
 
-        duriansCount = 0
-        goodCount = 0
+    #look up the chat_id for each player that has joined
+    #send each of them a message with their randomly assigned character 
+    user_id_retrieve = db.get_userid_arr(chat_id)
+    for user in user_id_retrieve:
+        context.bot.send_message(
+            chat_id=user,
+            text=random.choice(list(characterDict.keys()))
+        )
+
+
+    duriansCount = 0
+    goodCount = 0
+    
+    #game running is true 
+    game = True
+    while game :
+
+        #game play:
+        #send message on group chat about start
+        #send tunnel message
+        #send command to each player for what they should do during tunnel
+        #react to responses from each player on the GC
+        #send message about the start of the station time and start timer and discussion time
+        #End discussion
+        #Send message to each person about voting
+        #React to votes from each player. Needs to add it up and see who is removed.
+
+        if(duriansCount == 0):
+            #call end game method
+            game = False
         
-        #game running is true 
-        game = True
-        while game :
+        elif(goodCount == 0):
+            #call end game method
+            game = False
 
-            #game play:
-            #send message on group chat about start
-            #send tunnel message
-            #send command to each player for what they should do during tunnel
-            #react to responses from each player on the GC
-            #send message about the start of the station time and start timer and discussion time
-            #End discussion
-            #Send message to each person about voting
-            #React to votes from each player. Needs to add it up and see who is removed.
-
-            if(duriansCount == 0):
-                #call end game method
-                game = False
-            
-            elif(goodCount == 0):
-                #call end game method
-                game = False
-
-            elif(duriansCount == 1 and goodCount == 1):
-                #call end game method
-                game = False
-            
-            else:
-                #Send message about leaving and updated player list/Winner depending on if condition
-                #decrease the count and remove player from db 
-                print("game continues")
-
+        elif(duriansCount == 1 and goodCount == 1):
+            #call end game method
+            game = False
+        
+        else:
+            #Send message about leaving and updated player list/Winner depending on if condition
+            #decrease the count and remove player from db 
+            print("game continues")
 
 
 
@@ -166,6 +177,8 @@ def join(update, context):
             text=f'{usernames_list}'
         )
 
+        db.get_users(chat_id)
+        db.get_usernames(chat_id)
 
         #send enough players message
         if(db.get_user_count(chat_id) > 2):
@@ -173,20 +186,12 @@ def join(update, context):
                     chat_id=chat_id,
                     text=f'Enough players!'
             )
-            #look up the chat_id for each player that has joined
-            #send each of them a message with their randomly assigned character 
-            user_id_retrieve = db.get_users(chat_id)
-            for user in user_id_retrieve:
-                context.bot.send_message(
-                    chat_id=user[0],
-                    text=random.choice(list(characterDict.keys()))
-                )
+
+            #call gameplay function
+            gamePlay(update, context, chat_id)
 
     else: 
         print("error with join button")
-
-    db.get_users(chat_id)
-    db.get_usernames(chat_id)
 
 
 

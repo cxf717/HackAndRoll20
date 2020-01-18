@@ -87,3 +87,14 @@ class DBHelper:
         count = self.conn.execute(stmt).fetchone()[0]
         self.conn.commit()
         return count
+
+    def get_userid_arr(self, chat_id):
+        table_name = "users_" + str(chat_id)[1:]
+        stmt = "SELECT user_id FROM " + table_name
+        results = self.conn.execute(stmt)
+        self.conn.commit()
+        
+        userid_arr = []
+        for user in results:
+            userid_arr.append(user[0])
+        return userid_arr
