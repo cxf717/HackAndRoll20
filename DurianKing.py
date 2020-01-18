@@ -33,7 +33,7 @@ def new_member(update, context):
         if member.username == 'claire_game_test_bot':
             context.bot.send_message(
                 chat_id=update.effective_chat.id,
-                text=f'Hello, Welcome to Changi Airport MRT! Type/start to begin.'
+                text=f'Hello, Welcome to Changi Airport MRT! Type /commands for a list of commands'
             )
 
 #handler for being added to a group
@@ -53,38 +53,30 @@ updater.dispatcher.add_handler(
 def start(update, context):
     context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text=f'Welcome'
+        text=f'Welcome to Durian King'
     )
 
 
 # Add /start_game code 
 def start_game(update, context):
-    context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text=f'You have started a game of Durian King'
-    )
 
-    keyboard = [[InlineKeyboardButton("Join", callback_data='1')]]
+    #send them to a PM where we will set up!
+    keyboard = [[InlineKeyboardButton("Join", url="t.me/claire_game_test_bot")]]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
+    #send gif(?) and message upon starting game 
     context.bot.send_photo(
         chat_id=update.effective_chat.id, 
-        photo='https://telegram.org/img/t_logo.png',
+        photo='https://images.app.goo.gl/egrpX67bikkW438y8', 
+        caption = 'A new game has been started! Click join to join the game.',
         reply_markup=reply_markup
     )
 
-
-#join game code 
-def join(update, context):
-    query = update.callback_query
-    if query.data == '1':
-        context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text=f'join game stuff'
-        )
-    else: 
-        print("error with join button")
-
+    #player joined game message
+    context.bot.send_message(
+        chat_id = update.effective_chat.id,
+        text = f'Player Joined:'
+    )
 
 
 
@@ -99,10 +91,6 @@ updater.dispatcher.add_handler(
     CommandHandler('start_game', start_game)
 )
 
-#add a handler for join game button
-updater.dispatcher.add_handler(
-    CallbackQueryHandler(join)
-)
 
 
 
