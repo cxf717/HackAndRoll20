@@ -63,6 +63,7 @@ class DBHelper:
         self.conn.commit()
         return count
 
+    # returns a string of the list of users' first_names
     def get_usernames_list(self, chat_id):
         table_name = "users_" + str(chat_id)[1:]
         stmt = "SELECT username FROM " + table_name
@@ -90,15 +91,36 @@ class DBHelper:
         userid_arr = []
         for user in results:
             userid_arr.append(user[0])
+        
+        for id in userid_arr:
+            print(id)
         return userid_arr
 
+    # check if user exists in database already
+    # returns true if they exist and false if they don't
     def check_user(self, user_id, chat_id):
         table_name = "users_" + str(chat_id)[1:]
         stmt = "SELECT EXISTS (SELECT 1 FROM " + table_name + " WHERE user_id = (?))"
         args = (user_id, )
         result = self.conn.execute(stmt, args).fetchone()[0]
         self.conn.commit()
-        return result
+        if result == 0:
+            return False
+        else:
+            return True
+
+    # check if any user already has a particular role
+    # returns true if they exist and false if they don't
+    def check_role(self, role, chat_id):
+        table_name = "users_" + str(chat_id)[1:]
+        stmt = "SELECT EXISTS (SELECT 1 FROM " + table_name + " WHERE role = (?))"
+        args = (role, )
+        result = self.conn.execute(stmt, args).fetchone()[0]
+        self.conn.commit()
+        if result == 0:
+            return False
+        else:
+            return True
 
     def delete_all_users(self, chat_id):
         table_name = "users_" + str(chat_id)[1:]
