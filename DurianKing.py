@@ -9,11 +9,11 @@ import logging
 import random
 
 ###### Data structures ######
+#characters
 characterDict = {
     "character one" : "description",
     "character two" : "description"
 }
-print(characterDict)
 
 
 
@@ -76,7 +76,8 @@ def start_game(update, context):
                 chat_id = update.effective_chat.id,
                 text = f'Please start the game in a group!'
             )
-    elif(chat_type == "group" or chat-type == "supergroup"):
+    elif(chat_type == "group" or chat_type == "supergroup"):
+
         #send them to a PM where we will set up!
         keyboard = [[InlineKeyboardButton("Join", url="t.me/claire_game_test_bot")]]
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -95,12 +96,44 @@ def start_game(update, context):
             text = f'Player Joined:'
         )
 
-
         #when enough characters have joined then start game
         #look up the chat_id for each player that has joined
         #send each of them a message with their randomyl assigned character 
-        
         c = random.choice(list(characterDict.keys()))
+
+        
+        #game running is true 
+        game = True
+        while game :
+            duriansCount = 0
+            goodCount = 0
+
+            #game play:
+            #send message on group chat about start
+            #send tunnel message
+            #send command to each player for what they should do during tunnel
+            #react to responses from each player on the GC
+            #send message about the start of the station time and start timer and discussion time
+            #End discussion
+            #Send message to each person about voting
+            #React to votes from each player. Needs to add it up and see who is removed.
+
+            if(duriansCount == 0):
+                #call end game method
+                game = False
+            
+            elif(goodCount == 0):
+                #call end game method
+                game = False
+
+            elif(duriansCount == 1 and goodCount == 1):
+                #call end game method
+                game = False
+            
+            else:
+                #Send message about leaving and updated player list/Winner depending on if condition
+                #decrease the count and remove player from db 
+                print("game continues")
 
 
 
