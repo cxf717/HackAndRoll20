@@ -31,11 +31,23 @@ updater = Updater(token=BOT_TOKEN, use_context=True)
 ######## Main Code ###########
 
 # Add /start code 
+# Only allows the game to start if it is /start in a group
 def start(update, context):
-    context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text=f'Hello {update.effective_message.chat.first_name}, Welcome to Singapore!'
-    )
+    chat_type = update.effective_message.chat.type
+    if (chat_type == "private" or chat_type == "channel"):
+        context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=f'Please start the game in a group!'
+        )
+    elif (chat_type == "group" or chat_type == "supergroup"):     
+        context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=f'You have started a game of Durian King. Eee, something stinks!'
+        )
+        context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=f'Here is my second message.'
+        )
 
 
 
