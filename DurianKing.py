@@ -49,6 +49,7 @@ updater.dispatcher.add_handler(
 ######## Main Code ###########
 
 # Add /start code 
+#### here it should start the PM with the people that join a group 
 def start(update, context):
     context.bot.send_message(
         chat_id=update.effective_chat.id,
@@ -63,6 +64,26 @@ def start_game(update, context):
         text=f'You have started a game of Durian King'
     )
 
+    keyboard = [[InlineKeyboardButton("Join", callback_data='1')]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    context.bot.send_photo(
+        chat_id=update.effective_chat.id, 
+        photo='https://telegram.org/img/t_logo.png',
+        reply_markup=reply_markup
+    )
+
+
+#join game code 
+def join(update, context):
+    query = update.callback_query
+    if query.data == '1':
+        context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=f'join game stuff'
+        )
+    else: 
+        print("error with join button")
 
 
 
@@ -78,7 +99,10 @@ updater.dispatcher.add_handler(
     CommandHandler('start_game', start_game)
 )
 
-
+#add a handler for join game button
+updater.dispatcher.add_handler(
+    CallbackQueryHandler(join)
+)
 
 
 
