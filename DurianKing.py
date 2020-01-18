@@ -27,6 +27,7 @@ updater = Updater(token=BOT_TOKEN, use_context=True)
 
 
 
+
 ######## Main Code ###########
 
 # Add /start code 
@@ -41,13 +42,11 @@ def start(update, context):
 
 
 
-
 ######### Handlers ###########
 #add a handler for /start
 updater.dispatcher.add_handler(
     CommandHandler('start', start)
 )
-
 
 
 
