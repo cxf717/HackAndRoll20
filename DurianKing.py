@@ -106,7 +106,7 @@ def randomiser(userid_arr):
 
 
 #gameplay function
-def gamePlay (update, context, chat_id):
+def setCharacter (update, context, chat_id):
 
     #have a set number of roles and randomly assign each player to one
     #send each of them a message with their randomly assigned character 
@@ -128,30 +128,35 @@ def gamePlay (update, context, chat_id):
             parse_mode=telegram.ParseMode.HTML
         )
 
+        gamePlay(update, context, chat_id)
+
+
+def gamePlay(update, context, chat_id):
+    print("heyo")
+
     #count the characters 
     duriansCount = 0
     goodCount = 0
-    
-    #game running is true 
+
     game = True
 
-    while game is True :
-
-        def groupChatMessage(message):
+    def groupChatMessage(message):
             context.bot.send_message(
                 chat_id=chat_id,
                 text=message,
                 parse_mode=telegram.ParseMode.HTML
             )
 
-        def privateMessage(message):
-            player_id = db.get_userid_arr(chat_id)
-            for user in player_id:
-                context.bot.send_message(
-                    chat_id=user,
-                    text=message,
-                    parse_mode=telegram.ParseMode.HTML
-                )
+    def privateMessage(message):
+        player_id = db.get_userid_arr(chat_id)
+        for user in player_id:
+            context.bot.send_message(
+                chat_id=user,
+                text=message,
+                parse_mode=telegram.ParseMode.HTML
+            )
+
+    while game  :
 
         #send message on group chat about start
         groupChatMessage("start message")
@@ -214,7 +219,6 @@ def gamePlay (update, context, chat_id):
             #decrease the count and remove player from db 
 
             print("game continues")
-
 
 def endGame(update, context, chat_id):
 
@@ -282,7 +286,7 @@ def join(update, context):
             )
 
             #call gameplay function
-            gamePlay(update, context, chat_id)
+            setCharacter(update, context, chat_id)
 
     else: 
         print("error with join button")
