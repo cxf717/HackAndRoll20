@@ -90,8 +90,9 @@ def start_game(update, context):
         keyboard_callback = [[InlineKeyboardButton("Join", callback_data='1')]]
         reply_markup_callback = InlineKeyboardMarkup(keyboard_callback)
 
-         #send gif(?) and message upon starting game 
-        context.bot.send_photo(
+        #send gif(?) and message upon starting game 
+        global start_game_msg
+        start_game_msg = context.bot.send_photo(
             chat_id=chat_id, 
             photo='https://images.app.goo.gl/egrpX67bikkW438y8', 
             caption = 'A new game has been started! Click join to join the game.',
@@ -183,13 +184,11 @@ def join(update, context):
                     chat_id=chat_id,
                     text=f'<b>Passenger List:</b>' + f'{usernames_list}',
                     parse_mode=telegram.ParseMode.HTML
-                ).message_id
-                print("msg_id", player_list_msg)
+                )
             else:
-                print("msg_id", player_list_msg)
                 context.bot.edit_message_text(
                     chat_id=chat_id, 
-                    message_id=player_list_msg,
+                    message_id=player_list_msg.message_id,
                     text=f'<b>Passenger List:</b> ' + f'{usernames_list}',
                     parse_mode=telegram.ParseMode.HTML
                 )
@@ -204,6 +203,14 @@ def join(update, context):
             context.bot.send_message(
                     chat_id=chat_id,
                     text=f'Enough players. Game starting!'
+            )
+            
+            # remove join button from start game message
+            context.bot.edit_message_caption(
+                chat_id=chat_id,
+                message_id=start_game_msg.message_id,
+                photo='https://images.app.goo.gl/egrpX67bikkW438y8', 
+                caption = 'A new game is starting! Your roles have been assigned. Have fun!',     
             )
 
             #call gameplay function
