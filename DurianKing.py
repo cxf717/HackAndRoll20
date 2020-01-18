@@ -35,6 +35,9 @@ with open('token.ini', 'r') as file:
 updater = Updater(token=BOT_TOKEN, use_context=True)
 # Setup database when bot is started
 db = DBHelper()
+print("start db setup")
+db.setup()
+print("end db setup")
 
 
 ####### Added to group chat main code ############
@@ -79,23 +82,21 @@ def start_game(update, context):
                 text = f'Please start the game in a group!'
             )
     elif(chat_type == "group" or chat_type == "supergroup"):
-
-        #START DATABASE
-        print("start db setup")
-        #db.delete_all_users()
-        db.setup()
-        print("end db setup")
+        
+        # clear database
+        db.delete_all_users()
+        print("clear database")
 
         #send them to a PM where we will set up!
-        keyboard = [[InlineKeyboardButton("Join", callback_data='1', url="t.me/claire_game_test_bot")]]
-        reply_markup = InlineKeyboardMarkup(keyboard)
+        keyboard_callback = [[InlineKeyboardButton("Join", callback_data='1')], [InlineKeyboardButton("Assign Character", url="t.me/claire_game_test_bot")]]
+        reply_markup_callback = InlineKeyboardMarkup(keyboard_callback)
 
-        #send gif(?) and message upon starting game 
+         #send gif(?) and message upon starting game 
         context.bot.send_photo(
             chat_id=update.effective_chat.id, 
             photo='https://images.app.goo.gl/egrpX67bikkW438y8', 
-            caption = 'A new game has been started! Click join to join the game.',
-            reply_markup=reply_markup
+            caption = 'A new game has been started! Click join to join the game. Click assign character for your character',
+            reply_markup=reply_markup_callback
         )
 
 
@@ -142,19 +143,31 @@ def start_game(update, context):
 
 #join game code 
 def join(update, context):
+
     query = update.callback_query
-    if query.data == '1':
-        db.add_user(query.from_user.id, query.from_user.username, None, 0)
+
+    if db.check_user(query.from_user.id) == 0:
+        db.add_user(query.from_user.id, query.from_user.first_name, None, 0)
+        print("user successfully added")
         context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text=f'Yay you have successfully joined the game!'
-        )
+            text=f'Yay {query.from_user.first_name} has successfully joined the game!'
+        ) 
+    else:
         context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text=f'{db.get_users}'
+            text=f'{query.from_user.first_name} is already in the game!'
         )
-    else: 
-        print("error with join button")
+
+    usernames_list = db.get_usernames()
+
+    context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f'{usernames_list}'
+    )
+    
+    db.get_users()
+    db.get_usernames()
 
 
 
