@@ -33,11 +33,9 @@ with open('token.ini', 'r') as file:
 
 # Create the bot
 updater = Updater(token=BOT_TOKEN, use_context=True)
+
 # Setup database when bot is started
 db = DBHelper()
-print("start db setup")
-db.setup()
-print("end db setup")
 
 
 ####### Added to group chat main code ############
@@ -75,16 +73,21 @@ def start(update, context):
 # Add /start_game code 
 def start_game(update, context):
 
-    chat_type = update.effective_message.chat.type 
+    chat_type = update.effective_message.chat.type
+    chat_id = update.effective_message.chat.id
+
     if (chat_type == "private" or chat_type == "channel"):
             context.bot.send_message(
-                chat_id = update.effective_chat.id,
+                chat_id = chat_id ,
                 text = f'Please start the game in a group!'
             )
     elif(chat_type == "group" or chat_type == "supergroup"):
         
-        # clear database
-        db.delete_all_users()
+       # clear database
+        print("start db setup")
+        db.setup(chat_id)
+        print("end db setup")
+        db.delete_all_users(chat_id)
         print("clear database")
 
         #send them to a PM where we will set up!
@@ -93,7 +96,7 @@ def start_game(update, context):
 
          #send gif(?) and message upon starting game 
         context.bot.send_photo(
-            chat_id=update.effective_chat.id, 
+            chat_id=chat_id , 
             photo='https://images.app.goo.gl/egrpX67bikkW438y8', 
             caption = 'A new game has been started! Click join to join the game. Click assign character for your character',
             reply_markup=reply_markup_callback
@@ -101,6 +104,8 @@ def start_game(update, context):
 
 
         #when enough characters have joined then start game
+        
+
         #look up the chat_id for each player that has joined
         #send each of them a message with their randomyl assigned character 
         c = random.choice(list(characterDict.keys()))
@@ -143,31 +148,34 @@ def start_game(update, context):
 
 #join game code 
 def join(update, context):
-
     query = update.callback_query
+    chat_id = update.effective_message.chat.id
 
-    if db.check_user(query.from_user.id) == 0:
-        db.add_user(query.from_user.id, query.from_user.first_name, None, 0)
-        print("user successfully added")
+    if query.data == '1':
+        if db.check_user(query.from_user.id, chat_id) == 0:
+            db.add_user(query.from_user.id, query.from_user.first_name, None, 0, chat_id)
+            print("user successfully added")
+            context.bot.send_message(
+                chat_id=chat_id,
+                text=f'Yay {query.from_user.first_name} has successfully joined the game!'
+            ) 
+        else:
+            context.bot.send_message(
+                chat_id=chat_id,
+                text=f'{query.from_user.first_name} is already in the game!'
+            )
+
+        usernames_list = db.get_usernames(chat_id)
+
         context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text=f'Yay {query.from_user.first_name} has successfully joined the game!'
-        ) 
-    else:
-        context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text=f'{query.from_user.first_name} is already in the game!'
+            chat_id=chat_id,
+            text=f'{usernames_list}'
         )
-
-    usernames_list = db.get_usernames()
-
-    context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text=f'{usernames_list}'
-    )
+    else: 
+        print("error with join button")
     
-    db.get_users()
-    db.get_usernames()
+    db.get_users(chat_id)
+    db.get_usernames(chat_id)
 
 
 
