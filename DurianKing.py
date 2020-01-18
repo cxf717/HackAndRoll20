@@ -6,6 +6,16 @@ import json
 import os
 import requests
 import logging
+import random
+
+###### Data structures ######
+characterDict = {
+    "character one" : "description",
+    "character two" : "description"
+}
+print(characterDict)
+
+
 
 
 ###### Bot Setup #######
@@ -60,23 +70,39 @@ def start(update, context):
 # Add /start_game code 
 def start_game(update, context):
 
-    #send them to a PM where we will set up!
-    keyboard = [[InlineKeyboardButton("Join", url="t.me/claire_game_test_bot")]]
-    reply_markup = InlineKeyboardMarkup(keyboard)
+    chat_type = update.effective_message.chat.type 
+    if (chat_type == "private" or chat_type == "channel"):
+            context.bot.send_message(
+                chat_id = update.effective_chat.id,
+                text = f'Please start the game in a group!'
+            )
+    elif(chat_type == "group" or chat-type == "supergroup"):
+        #send them to a PM where we will set up!
+        keyboard = [[InlineKeyboardButton("Join", url="t.me/claire_game_test_bot")]]
+        reply_markup = InlineKeyboardMarkup(keyboard)
 
-    #send gif(?) and message upon starting game 
-    context.bot.send_photo(
-        chat_id=update.effective_chat.id, 
-        photo='https://images.app.goo.gl/egrpX67bikkW438y8', 
-        caption = 'A new game has been started! Click join to join the game.',
-        reply_markup=reply_markup
-    )
+        #send gif(?) and message upon starting game 
+        context.bot.send_photo(
+            chat_id=update.effective_chat.id, 
+            photo='https://images.app.goo.gl/egrpX67bikkW438y8', 
+            caption = 'A new game has been started! Click join to join the game.',
+            reply_markup=reply_markup
+        )
 
-    #player joined game message
-    context.bot.send_message(
-        chat_id = update.effective_chat.id,
-        text = f'Player Joined:'
-    )
+        #player joined game message
+        context.bot.send_message(
+            chat_id = update.effective_chat.id,
+            text = f'Player Joined:'
+        )
+
+
+        #when enough characters have joined then start game
+        #look up the chat_id for each player that has joined
+        #send each of them a message with their randomyl assigned character 
+        
+        c = random.choice(list(characterDict.keys()))
+
+
 
 
 
