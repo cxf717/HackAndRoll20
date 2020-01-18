@@ -26,6 +26,9 @@ updater = Updater(token=BOT_TOKEN, use_context=True)
 
 # Setup database when bot is started
 db = DBHelper()
+print("start db setup")
+db.setup()
+print("end db setup")
 
 ######## Main Code ###########
 
@@ -39,10 +42,9 @@ def start(update, context):
             text=f'Please start the game in a group!'
         )
     elif (chat_type == "group" or chat_type == "supergroup"):  
-        print("start db setup")
+        # clear database
         db.delete_all_users()
-        db.setup()
-        print("end db setup")
+        print("clear database")
 
         context.bot.send_message(
             chat_id=update.effective_chat.id,
@@ -62,18 +64,30 @@ def start(update, context):
 def join(update, context):
     query = update.callback_query
     if query.data == '1':
-        db.add_user(query.from_user.id, query.from_user.username, None, 0)
+        if db.check_user(query.from_user.id) == 0:
+            db.add_user(query.from_user.id, query.from_user.first_name, None, 0)
+            print("user successfully added")
+            context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=f'Yay {query.from_user.first_name} has successfully joined the game!'
+            ) 
+        else:
+            context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=f'{query.from_user.first_name} is already in the game!'
+            )
+
+        usernames_list = db.get_usernames()
+
         context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text=f'Yay you have successfully joined the game!'
-        )
-        context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text=f'{db.get_users}'
+            text=f'{usernames_list}'
         )
     else: 
         print("error with join button")
-
+    
+    db.get_users()
+    db.get_usernames()
 
 
 ######### Handlers ###########
