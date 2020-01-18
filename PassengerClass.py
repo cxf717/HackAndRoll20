@@ -13,7 +13,11 @@ class passenger(object):
 
 class DurianLover(passenger):
     def __init__(self):
-            super().__init__("Durian Lover", "You are the Durian Lover!" + "\U0001f60d")
+            super().__init__("Durian Lover", "You are the Durian Lover!" + "\U0001f60d"
+                             
+class PretendSleeper(passenger):
+    def __init__(self):
+            super().__init__("Pretend Sleeper", "You are the Pretend Sleeper!"+ "\U0001f634")
             
 
 	
