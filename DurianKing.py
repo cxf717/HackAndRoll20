@@ -7,6 +7,7 @@ import os
 import requests
 import logging
 import random
+from dbhelper import DBHelper
 
 ###### Data structures ######
 #characters
@@ -32,7 +33,8 @@ with open('token.ini', 'r') as file:
 
 # Create the bot
 updater = Updater(token=BOT_TOKEN, use_context=True)
-
+# Setup database when bot is started
+db = DBHelper()
 
 
 ####### Added to group chat main code ############
@@ -78,8 +80,14 @@ def start_game(update, context):
             )
     elif(chat_type == "group" or chat_type == "supergroup"):
 
+        #START DATABASE
+        print("start db setup")
+        #db.delete_all_users()
+        db.setup()
+        print("end db setup")
+
         #send them to a PM where we will set up!
-        keyboard = [[InlineKeyboardButton("Join", url="t.me/claire_game_test_bot")]]
+        keyboard = [[InlineKeyboardButton("Join", callback_data='1', url="t.me/claire_game_test_bot")]]
         reply_markup = InlineKeyboardMarkup(keyboard)
 
         #send gif(?) and message upon starting game 
@@ -90,11 +98,6 @@ def start_game(update, context):
             reply_markup=reply_markup
         )
 
-        #player joined game message
-        context.bot.send_message(
-            chat_id = update.effective_chat.id,
-            text = f'Player Joined:'
-        )
 
         #when enough characters have joined then start game
         #look up the chat_id for each player that has joined
@@ -137,6 +140,22 @@ def start_game(update, context):
 
 
 
+#join game code 
+def join(update, context):
+    query = update.callback_query
+    if query.data == '1':
+        db.add_user(query.from_user.id, query.from_user.username, None, 0)
+        context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=f'Yay you have successfully joined the game!'
+        )
+        context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=f'{db.get_users}'
+        )
+    else: 
+        print("error with join button")
+
 
 
 ######### Handlers ###########
@@ -151,6 +170,12 @@ updater.dispatcher.add_handler(
 )
 
 
+#handler for join game button
+updater.dispatcher.add_handler(
+    CallbackQueryHandler(join)
+)
+
+
 
 
 ####### Running Bot #########
@@ -161,5 +186,4 @@ print('Bot started!')
 
 # Wait for the bot to stop
 updater.idle()
-
 print('Bot stopped!')
