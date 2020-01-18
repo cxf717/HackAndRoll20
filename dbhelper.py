@@ -10,8 +10,6 @@ class DBHelper:
     # create table of all the relevant info on users
     def setup(self, chat_id):
         table_name = "users_" + str(chat_id)[1:]
-        
-        print(table_name)
         tblstmt = "CREATE TABLE IF NOT EXISTS " + table_name + " (user_id text NOT NULL, username text NOT NULL, role text, status int NOT NULL)"
         self.conn.execute(tblstmt)
         self.conn.commit()
@@ -48,6 +46,7 @@ class DBHelper:
         table_name = "users_" + str(chat_id)[1:]
         stmt = "SELECT * FROM " + table_name
         results = self.conn.execute(stmt)
+        self.conn.commit()
         print("========== " + table_name + " =========")
         for user in results:
             print("user_id:", user[0])
@@ -56,6 +55,13 @@ class DBHelper:
             print("status:", user[3])
         print("=============== end ==============")
         return results
+
+    def get_user_count(self, chat_id):
+        table_name = "users_" + str(chat_id)[1:]
+        stmt = "SELECT COUNT(*) FROM " + table_name
+        count = self.conn.execute(stmt).fetchone()[0]
+        self.conn.commit()
+        return count
 
     def get_usernames_list(self, chat_id):
         table_name = "users_" + str(chat_id)[1:]
