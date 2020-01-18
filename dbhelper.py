@@ -10,8 +10,6 @@ class DBHelper:
     # create table of all the relevant info on users
     def setup(self, chat_id):
         table_name = "users_" + str(chat_id)[1:]
-        
-        print(table_name)
         tblstmt = "CREATE TABLE IF NOT EXISTS " + table_name + " (user_id text NOT NULL, username text NOT NULL, role text, status int NOT NULL)"
         self.conn.execute(tblstmt)
         self.conn.commit()
@@ -25,10 +23,17 @@ class DBHelper:
 
     def update_user(self, user_id, username, role, status, chat_id):
         table_name = "users_" + str(chat_id)[1:]
-        stmt = "UPDATE " + table_name + " SET user_id = ?, username = ?, role = ?, status = ? WHERE id = ?"
-        args = (user_id, username, role, status, )
+        stmt = "UPDATE " + table_name + " SET username = ?, role = ?, status = ? WHERE user_id = ?"
+        args = (username, role, status, user_id, )
         self.conn.execute(stmt, args)
         self.conn.commit()
+
+    def set_role(self, user_id, role, chat_id):
+        table_name = "users_" + str(chat_id)[1:]
+        stmt = "UPDATE " + table_name + " SET role = ? WHERE user_id = ?"
+        args = (role, user_id, )
+        self.conn.execute(stmt, args)
+        self.conn.commit()        
 
     def delete_user(self, user_id, chat_id):
         table_name = "users_" + str(chat_id)[1:]
@@ -40,22 +45,42 @@ class DBHelper:
     def get_users(self, chat_id):
         table_name = "users_" + str(chat_id)[1:]
         stmt = "SELECT * FROM " + table_name
-        results = self.conn.execute(stmt)
+        user_list = self.conn.execute(stmt)
+        self.conn.commit()
         print("========== " + table_name + " =========")
-        for user in results:
-            print("user_id", user[0])
-            print("username", user[1])
-            print("role", user[2])
-            print("status", user[3])
+        for user in user_list:
+            print("user_id:", user[0])
+            print("username:", user[1])
+            print("role:", user[2])
+            print("status:", user[3])
         print("=============== end ==============")
-        return results
+        return user_list
 
-    def get_usernames(self, chat_id):
+    def get_user_info(self, user_id, chat_id):
+        table_name = "users_" + str(chat_id)[1:]
+        stmt = "SELECT * FROM " + table_name + " WHERE user_id = (?)"
+        args = (user_id, )
+        results = self.conn.execute(stmt, args)
+        self.conn.commit()
+
+        for user_info in results:
+            return user_info
+
+    def get_user_count(self, chat_id):
+        table_name = "users_" + str(chat_id)[1:]
+        stmt = "SELECT COUNT(*) FROM " + table_name
+        count = self.conn.execute(stmt).fetchone()[0]
+        self.conn.commit()
+        return count
+
+    # returns a string of the list of users' first_names
+    def get_usernames_list(self, chat_id):
         table_name = "users_" + str(chat_id)[1:]
         stmt = "SELECT username FROM " + table_name
         results = self.conn.execute(stmt)
+        self.conn.commit()
         
-        usernames_list = "Players List:"
+        usernames_list = ""
         index = 1
         print("========== names =========")
         for user in results:
@@ -67,27 +92,6 @@ class DBHelper:
         print("=========== end ==========")
         return usernames_list
 
-    def check_user(self, user_id, chat_id):
-        table_name = "users_" + str(chat_id)[1:]
-        stmt = "SELECT EXISTS (SELECT 1 FROM " + table_name + " WHERE user_id = (?))"
-        args = (user_id, )
-        result = self.conn.execute(stmt, args).fetchone()[0]
-        self.conn.commit()
-        return result
-
-    def delete_all_users(self, chat_id):
-        table_name = "users_" + str(chat_id)[1:]
-        stmt = "DELETE FROM " + table_name
-        self.conn.execute(stmt)
-        self.conn.commit()
-
-    def get_user_count(self, chat_id):
-        table_name = "users_" + str(chat_id)[1:]
-        stmt = "SELECT COUNT(*) FROM " + table_name
-        count = self.conn.execute(stmt).fetchone()[0]
-        self.conn.commit()
-        return count
-
     def get_userid_arr(self, chat_id):
         table_name = "users_" + str(chat_id)[1:]
         stmt = "SELECT user_id FROM " + table_name
@@ -97,4 +101,39 @@ class DBHelper:
         userid_arr = []
         for user in results:
             userid_arr.append(user[0])
+        
+        for id in userid_arr:
+            print(id)
         return userid_arr
+
+    # check if user exists in database already
+    # returns true if they exist and false if they don't
+    def check_user(self, user_id, chat_id):
+        table_name = "users_" + str(chat_id)[1:]
+        stmt = "SELECT EXISTS (SELECT 1 FROM " + table_name + " WHERE user_id = (?))"
+        args = (user_id, )
+        result = self.conn.execute(stmt, args).fetchone()[0]
+        self.conn.commit()
+        if result == 0:
+            return False
+        else:
+            return True
+
+    # check if any user already has a particular role
+    # returns true if they exist and false if they don't
+    def check_role(self, role, chat_id):
+        table_name = "users_" + str(chat_id)[1:]
+        stmt = "SELECT EXISTS (SELECT 1 FROM " + table_name + " WHERE role = (?))"
+        args = (role, )
+        result = self.conn.execute(stmt, args).fetchone()[0]
+        self.conn.commit()
+        if result == 0:
+            return False
+        else:
+            return True
+
+    def delete_all_users(self, chat_id):
+        table_name = "users_" + str(chat_id)[1:]
+        stmt = "DELETE FROM " + table_name
+        self.conn.execute(stmt)
+        self.conn.commit()

@@ -8,13 +8,7 @@ import requests
 import logging
 import random
 from dbhelper import DBHelper
-
-###### Data structures ######
-#characters
-characterDict = {
-    "character one" : "description",
-    "character two" : "description"
-}
+from characters import characterDict
 
 
 
@@ -32,6 +26,9 @@ with open('token.ini', 'r') as file:
 
 # Create the bot
 updater = Updater(token=BOT_TOKEN, use_context=True)
+
+# Configure game settings
+MINIMUM_PLAYERS = 3
 
 # Setup database when bot is started
 db = DBHelper()
@@ -93,34 +90,42 @@ def start_game(update, context):
         keyboard_callback = [[InlineKeyboardButton("Join", callback_data='1')]]
         reply_markup_callback = InlineKeyboardMarkup(keyboard_callback)
 
-         #send gif(?) and message upon starting game 
-        context.bot.send_photo(
-            chat_id=chat_id , 
+        #send gif(?) and message upon starting game 
+        global start_game_msg
+        start_game_msg = context.bot.send_photo(
+            chat_id=chat_id, 
             photo='https://images.app.goo.gl/egrpX67bikkW438y8', 
-            caption = 'A new game has been started! Click join to join the game. Please also allow bot messages.',
+            caption = 'A new game has been started! Click join to join the game.',
             reply_markup=reply_markup_callback
         )
 
-def randomiser():
-    #if ():
-     #   character = random.choice(list(characterDict.keys()))
-    #else:
-     #   randomiser()
-    #return character
+def randomiser(userid_arr):
+    if (True):
+       player_id = random.choice(userid_arr)
+    return player_id
     #TO DO HERE ########################################################################
 
 #gameplay function
 def gamePlay (update, context, chat_id):
 
-    #look up the chat_id for each player that has joined
+    #have a set number of roles and randomly assign each player to one
     #send each of them a message with their randomly assigned character 
-    user_id_retrieve = db.get_userid_arr(chat_id)
-    for user in user_id_retrieve:
-        context.bot.send_message(
-            chat_id=user,
-            text=randomiser()
+    role_arr = ["Durian King", "Old Auntie", "Stomper"] ### hardcoded currently for testing please change
+    for character in role_arr:
+        player_id = randomiser(db.get_userid_arr(chat_id))
+        # check if player has already been assigned a role
+        user_info = db.get_user_info(player_id, chat_id)
+        while user_info[2] != "None":
+            player_id = randomiser(db.get_userid_arr(chat_id))
+            user_info = db.get_user_info(player_id, chat_id)
 
-            #update database to add the character
+        #update database to add the character
+        db.set_role(player_id, character, chat_id)
+
+        context.bot.send_message(
+            chat_id=player_id,
+            text='You\'re the ' + f'<b>{character}</b>!',
+            parse_mode=telegram.ParseMode.HTML
         #TO DO HERE ########################################################################
         )
 
@@ -167,34 +172,50 @@ def join(update, context):
     chat_id = update.effective_message.chat.id
 
     if query.data == '1':
-        if db.check_user(query.from_user.id, chat_id) == 0:
-            db.add_user(query.from_user.id, query.from_user.first_name, None, 0, chat_id)
+        if not db.check_user(query.from_user.id, chat_id):
+            db.add_user(query.from_user.id, query.from_user.first_name, "None", 0, chat_id)
             print("user successfully added")
             context.bot.send_message(
                 chat_id=chat_id,
-                text=f'Yay {query.from_user.first_name} has successfully joined the game! Waiting for more players'
-            )
+                text=f'Yay {query.from_user.first_name} has successfully joined the game!'
+            ) 
+
+            # send or update list of players
+            usernames_list = db.get_usernames_list(chat_id)
+        
+            if (db.get_user_count(chat_id) == 1):
+                global player_list_msg
+                player_list_msg = context.bot.send_message(
+                    chat_id=chat_id,
+                    text=f'<b>Passenger List:</b>' + f'{usernames_list}',
+                    parse_mode=telegram.ParseMode.HTML
+                )
+            else:
+                context.bot.edit_message_text(
+                    chat_id=chat_id, 
+                    message_id=player_list_msg.message_id,
+                    text=f'<b>Passenger List:</b> ' + f'{usernames_list}',
+                    parse_mode=telegram.ParseMode.HTML
+                )
         else:
             context.bot.send_message(
                 chat_id=chat_id,
                 text=f'{query.from_user.first_name} is already in the game!'
             )
 
-        usernames_list = db.get_usernames(chat_id)
-
-        context.bot.send_message(
-            chat_id=chat_id,
-            text=f'{usernames_list}'
-        )
-
-        db.get_users(chat_id)
-        db.get_usernames(chat_id)
-
         #send enough players message
-        if(db.get_user_count(chat_id) > 2):
+        if (db.get_user_count(chat_id) >= MINIMUM_PLAYERS): ### change number of players 
             context.bot.send_message(
                     chat_id=chat_id,
-                    text=f'Enough players!'
+                    text=f'Enough players. Game starting!'
+            )
+            
+            # remove join button from start game message
+            context.bot.edit_message_caption(
+                chat_id=chat_id,
+                message_id=start_game_msg.message_id,
+                photo='https://images.app.goo.gl/egrpX67bikkW438y8', 
+                caption = 'A new game is starting! Your roles have been assigned. Have fun!',     
             )
 
             #call gameplay function
