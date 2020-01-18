@@ -29,7 +29,7 @@ with open('token.ini', 'r') as file:
 updater = Updater(token=BOT_TOKEN, use_context=True)
 
 # Configure game settings
-MINIMUM_PLAYERS = 2
+MINIMUM_PLAYERS = 1
 
 # Setup database when bot is started
 db = DBHelper()
@@ -43,7 +43,7 @@ def new_member(update, context):
         if member.username == 'claire_game_test_bot':
             context.bot.send_message(
                 chat_id=update.effective_chat.id,
-                text=f'Hello, Welcome to Changi Airport MRT! Type /commands for a list of commands'
+                text=f'"Welcome to the sunny island of Singapore! Hi! I am Durian King the most  infamous famous fruit in Singapore. But do you know that bringing me on board the MRT is illegal? But recently my overpowering smell has been detected on some carriages... Lets catch and punish all the law breakers together! Disclaimer: All views expressed in this game are the views of the owner. Please do not take this seriously"'
             )
 
 #handler for being added to a group
@@ -63,7 +63,7 @@ updater.dispatcher.add_handler(
 def start(update, context):
     context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text=f'Welcome to Durian King'
+        text=f"Proceed to Changi Airport MRT station platform to start your journey now."
     )
 
 
@@ -135,7 +135,6 @@ def setCharacter (update, context, chat_id):
 
 
 def gamePlay(update, context, chat_id):
-    print("heyo")
 
     #count the characters 
     duriansCount = 0
@@ -162,42 +161,46 @@ def gamePlay(update, context, chat_id):
     while game  :
 
         #send message on group chat about start
-        groupChatMessage("start message")
+        groupChatMessage("(number) passengers on board liao. The train will now depart. Doors closing! Please hold on to the grab poles or hand grips.")
 
 
 
         #send tunnel message
-        groupChatMessage("tunnel message GC")
-
-        #send command to each player for what they should do during tunnel
-        privateMessage("Private tunnel message")
-
-        command_keyboard = [['command']]
-        reply_markup_command = telegram.ReplyKeyboardMarkup(command_keyboard)
-        #then callback data 
+        groupChatMessage("Next station, station. The service will end at Your attention please, we are now passing through a tunnel, please do not be alarmed by the change in environment. Also, please be reminded that durians are not allowed on board trains. Meanwhile...an overwhelming durian smell permeates the train... Passengers you have 90 seconds to take action (if any)!")
 
         player_id = db.get_userid_arr(chat_id)
         for user in player_id:
             #get message from their attached character object
-            message = "text"
+            message = "Your ability is: INSERT"
             context.bot.send_message(
                 chat_id=user, 
-                text=message, 
-                reply_markup=reply_markup_command)
+                text=message, )
 
-        #react to responses from each player on the GC
-        groupChatMessage("React to tunnel player messages")
+
+        #send command to each player for what they should do during tunnel
+        privateMessage("Type /execute to perform your special ability")
+
+        def execute (update, context):
+            context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=f'You have performed a special ability.'
+            )
+
+        #add handler for /execute
+        updater.dispatcher.add_handler(
+            CommandHandler('execute', execute)
+        )
 
 
 
 
 
         #send message about the start of the station time and start timer and discussion time
-        groupChatMessage("Station time message. You have 120 seconds to discuss")
+        groupChatMessage("The train will stop at station for seconds. Passenger you have 120 seconds to discuss who might have brought durians on board the train before voting commences.")
         #timer here 
 
         #End discussion
-        groupChatMessage("Discussion time is up! Voting begins.")
+        groupChatMessage("The train is departing soon. Passengers who you want to chase off the MRT??? Passengers you have  seconds to vote!")
 
 
 
@@ -205,7 +208,7 @@ def gamePlay(update, context, chat_id):
 
 
         #Send message to each person about voting
-        privateMessage("voting")
+        privateMessage("Who will you vote for?")
 
         player_id = db.get_userid_arr(chat_id)
         for user_id in player_id:
@@ -214,11 +217,10 @@ def gamePlay(update, context, chat_id):
             vote_arr = []
             results = db.get_users(chat_id)
             for user in results:
-                print(user[2])
                 if user[0] != player_id or user[3] == 0:
                     vote_arr.append(user[1])
             print(vote_arr)
-            
+
             #needs to give different names based on who they can vote for 
             #so other, in game, characters
             keyboard_vote = [[InlineKeyboardButton(vote_arr[0], callback_data='1')],[InlineKeyboardButton(vote_arr[1], callback_data='2')]]
@@ -235,7 +237,7 @@ def gamePlay(update, context, chat_id):
 
 
         #React to votes from each player. Needs to add it up and see who is removed.
-        groupChatMessage("result of voting:")
+        groupChatMessage("The passengers cast votes liao, amid doubts and suspicions, player has been chased off the MRT. (player) was the (role).")
         #max statement command from the database 
 
 
@@ -315,10 +317,6 @@ def join(update, context):
 
         #send enough players message
         if (db.get_user_count(chat_id) >= MINIMUM_PLAYERS): ### change number of players 
-            context.bot.send_message(
-                    chat_id=chat_id,
-                    text=f'Enough players. Game starting!'
-            )
             
             # remove join button from start game message
             context.bot.edit_message_caption(
