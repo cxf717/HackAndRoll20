@@ -28,7 +28,7 @@ with open('token.ini', 'r') as file:
 updater = Updater(token=BOT_TOKEN, use_context=True)
 
 # Configure game settings
-MINIMUM_PLAYERS = 2
+MINIMUM_PLAYERS = 3
 
 # Setup database when bot is started
 db = DBHelper()
@@ -99,28 +99,33 @@ def start_game(update, context):
             reply_markup=reply_markup_callback
         )
 
-def randomiser():
+def randomiser(userid_arr):
     if (True):
-       character = random.choice(list(characterDict.keys()))
-    else:
-       randomiser()
-    return character
+       player_id = random.choice(userid_arr)
+    return player_id
     #TO DO HERE ########################################################################
 
 #gameplay function
 def gamePlay (update, context, chat_id):
 
-    #look up the chat_id for each player that has joined
+    #have a set number of roles and randomly assign each player to one
     #send each of them a message with their randomly assigned character 
-    user_id_retrieve = db.get_userid_arr(chat_id)
-    for user in user_id_retrieve:
-        role = randomiser()
+    role_arr = ["Durian King", "Old Auntie", "Stomper"] ### hardcoded currently for testing please change
+    for character in role_arr:
+        player_id = randomiser(db.get_userid_arr(chat_id))
+        # check if player has already been assigned a role
+        user_info = db.get_user_info(player_id, chat_id)
+        while user_info[2] != "None":
+            player_id = randomiser(db.get_userid_arr(chat_id))
+            user_info = db.get_user_info(player_id, chat_id)
+
         #update database to add the character
-        db.set_role(user, role, chat_id)
+        db.set_role(player_id, character, chat_id)
 
         context.bot.send_message(
-            chat_id=user,
-            text=randomiser()
+            chat_id=player_id,
+            text='You\'re the ' + f'<b>{character}</b>!',
+            parse_mode=telegram.ParseMode.HTML
         #TO DO HERE ########################################################################
         )
 

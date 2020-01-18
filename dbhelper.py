@@ -56,6 +56,16 @@ class DBHelper:
         print("=============== end ==============")
         return user_list
 
+    def get_user_info(self, user_id, chat_id):
+        table_name = "users_" + str(chat_id)[1:]
+        stmt = "SELECT * FROM " + table_name + " WHERE user_id = (?)"
+        args = (user_id, )
+        results = self.conn.execute(stmt, args)
+        self.conn.commit()
+
+        for user_info in results:
+            return user_info
+
     def get_user_count(self, chat_id):
         table_name = "users_" + str(chat_id)[1:]
         stmt = "SELECT COUNT(*) FROM " + table_name
