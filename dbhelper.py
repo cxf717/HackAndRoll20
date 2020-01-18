@@ -48,8 +48,9 @@ class DBHelper:
             print("role", user[2])
             print("status", user[3])
         print("=============== end ==============")
+        return results
 
-    def get_usernames(self, chat_id):
+    def get_usernames_list(self, chat_id):
         table_name = "users_" + str(chat_id)[1:]
         stmt = "SELECT username FROM " + table_name
         results = self.conn.execute(stmt)

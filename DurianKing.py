@@ -81,7 +81,7 @@ def join(update, context):
                 text=f'{query.from_user.first_name} is already in the game!'
             )
 
-        usernames_list = db.get_usernames(chat_id)
+        usernames_list = db.get_usernames_list(chat_id)
 
         context.bot.send_message(
             chat_id=chat_id,
