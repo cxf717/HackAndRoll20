@@ -101,6 +101,13 @@ def start_game(update, context):
             reply_markup=reply_markup_callback
         )
 
+def randomiser():
+    #if ():
+     #   character = random.choice(list(characterDict.keys()))
+    #else:
+     #   randomiser()
+    #return character
+    #TO DO HERE ########################################################################
 
 #gameplay function
 def gamePlay (update, context, chat_id):
@@ -111,7 +118,10 @@ def gamePlay (update, context, chat_id):
     for user in user_id_retrieve:
         context.bot.send_message(
             chat_id=user,
-            text=random.choice(list(characterDict.keys()))
+            text=randomiser()
+
+            #update database to add the character
+        #TO DO HERE ########################################################################
         )
 
 
