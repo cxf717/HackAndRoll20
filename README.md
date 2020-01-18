@@ -2,4 +2,4 @@
 
 # Bot @: @claire_game_test_bot
 
-# Bot Name: Durian King 
+# Bot Name: Durian King - The Game  
