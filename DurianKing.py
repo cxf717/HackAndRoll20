@@ -91,7 +91,7 @@ def join(update, context):
         print("error with join button")
     
     db.get_users(chat_id)
-    db.get_usernames(chat_id)
+    db.get_usernames_list(chat_id)
 
 
 ######### Handlers ###########

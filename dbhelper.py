@@ -25,10 +25,17 @@ class DBHelper:
 
     def update_user(self, user_id, username, role, status, chat_id):
         table_name = "users_" + str(chat_id)[1:]
-        stmt = "UPDATE " + table_name + " SET user_id = ?, username = ?, role = ?, status = ? WHERE id = ?"
-        args = (user_id, username, role, status, )
+        stmt = "UPDATE " + table_name + " SET username = ?, role = ?, status = ? WHERE user_id = ?"
+        args = (username, role, status, user_id, )
         self.conn.execute(stmt, args)
         self.conn.commit()
+
+    def set_role(self, user_id, role, chat_id):
+        table_name = "users_" + str(chat_id)[1:]
+        stmt = "UPDATE " + table_name + " SET role = ? WHERE user_id = ?"
+        args = (role, user_id, )
+        self.conn.execute(stmt, args)
+        self.conn.commit()        
 
     def delete_user(self, user_id, chat_id):
         table_name = "users_" + str(chat_id)[1:]
@@ -43,10 +50,10 @@ class DBHelper:
         results = self.conn.execute(stmt)
         print("========== " + table_name + " =========")
         for user in results:
-            print("user_id", user[0])
-            print("username", user[1])
-            print("role", user[2])
-            print("status", user[3])
+            print("user_id:", user[0])
+            print("username:", user[1])
+            print("role:", user[2])
+            print("status:", user[3])
         print("=============== end ==============")
         return results
 
