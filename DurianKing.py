@@ -25,6 +25,24 @@ updater = Updater(token=BOT_TOKEN, use_context=True)
 
 
 
+####### Added to group chat main code ############
+
+# added to new group handler code
+def new_member(update, context):
+    for member in update.message.new_chat_members:
+        if member.username == 'claire_game_test_bot':
+            context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=f'Hello, Welcome to Changi Airport MRT! Type/start to begin.'
+            )
+
+#handler for being added to a group
+updater.dispatcher.add_handler(
+    MessageHandler(Filters.status_update.new_chat_members, new_member)
+)
+
+
+
 
 
 
@@ -34,9 +52,16 @@ updater = Updater(token=BOT_TOKEN, use_context=True)
 def start(update, context):
     context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text=f'Hello {update.effective_message.chat.first_name}, Welcome to Singapore!'
+        text=f'Welcome'
     )
 
+
+# Add /start_game code 
+def start_game(update, context):
+    context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f'You have started a game of Durian King'
+    )
 
 
 
@@ -46,6 +71,11 @@ def start(update, context):
 #add a handler for /start
 updater.dispatcher.add_handler(
     CommandHandler('start', start)
+)
+
+#add handler for /start_game
+updater.dispatcher.add_handler(
+    CommandHandler('start_game', start_game)
 )
 
 
