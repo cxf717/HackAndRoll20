@@ -48,6 +48,7 @@ class DBHelper:
             print("role", user[2])
             print("status", user[3])
         print("=============== end ==============")
+        return results
 
     def get_usernames(self, chat_id):
         table_name = "users_" + str(chat_id)[1:]
@@ -79,3 +80,10 @@ class DBHelper:
         stmt = "DELETE FROM " + table_name
         self.conn.execute(stmt)
         self.conn.commit()
+
+    def get_user_count(self, chat_id):
+        table_name = "users_" + str(chat_id)[1:]
+        stmt = "SELECT COUNT(*) FROM " + table_name
+        count = self.conn.execute(stmt).fetchone()[0]
+        self.conn.commit()
+        return count

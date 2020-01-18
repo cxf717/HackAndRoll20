@@ -18,7 +18,6 @@ characterDict = {
 
 
 
-
 ###### Bot Setup #######
 
 # Initialise logging
@@ -91,31 +90,25 @@ def start_game(update, context):
         print("clear database")
 
         #send them to a PM where we will set up!
-        keyboard_callback = [[InlineKeyboardButton("Join", callback_data='1')], [InlineKeyboardButton("Assign Character", url="t.me/claire_game_test_bot")]]
+        keyboard_callback = [[InlineKeyboardButton("Join", callback_data='1')], [InlineKeyboardButton("Allow Bot Messages", url="t.me/claire_game_test_bot")]]
         reply_markup_callback = InlineKeyboardMarkup(keyboard_callback)
 
          #send gif(?) and message upon starting game 
         context.bot.send_photo(
             chat_id=chat_id , 
             photo='https://images.app.goo.gl/egrpX67bikkW438y8', 
-            caption = 'A new game has been started! Click join to join the game. Click assign character for your character',
+            caption = 'A new game has been started! Click join to join the game. Please also allow bot messages.',
             reply_markup=reply_markup_callback
         )
 
 
-        #when enough characters have joined then start game
-        
 
-        #look up the chat_id for each player that has joined
-        #send each of them a message with their randomyl assigned character 
-        c = random.choice(list(characterDict.keys()))
-
+        duriansCount = 0
+        goodCount = 0
         
         #game running is true 
         game = True
         while game :
-            duriansCount = 0
-            goodCount = 0
 
             #game play:
             #send message on group chat about start
@@ -146,6 +139,7 @@ def start_game(update, context):
 
 
 
+
 #join game code 
 def join(update, context):
     query = update.callback_query
@@ -157,8 +151,8 @@ def join(update, context):
             print("user successfully added")
             context.bot.send_message(
                 chat_id=chat_id,
-                text=f'Yay {query.from_user.first_name} has successfully joined the game!'
-            ) 
+                text=f'Yay {query.from_user.first_name} has successfully joined the game! Waiting for more players'
+            )
         else:
             context.bot.send_message(
                 chat_id=chat_id,
@@ -171,9 +165,26 @@ def join(update, context):
             chat_id=chat_id,
             text=f'{usernames_list}'
         )
+
+
+        #send enough players message
+        if(db.get_user_count(chat_id) > 2):
+            context.bot.send_message(
+                    chat_id=chat_id,
+                    text=f'Enough players!'
+            )
+            #look up the chat_id for each player that has joined
+            #send each of them a message with their randomly assigned character 
+            user_id_retrieve = db.get_users(chat_id)
+            for user in user_id_retrieve:
+                context.bot.send_message(
+                    chat_id=user[0],
+                    text=random.choice(list(characterDict.keys()))
+                )
+
     else: 
         print("error with join button")
-    
+
     db.get_users(chat_id)
     db.get_usernames(chat_id)
 
