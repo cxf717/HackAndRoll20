@@ -6,7 +6,10 @@ import json
 import os
 import requests
 import logging
+import random
 from dbhelper import DBHelper
+from characters import characterDict
+
 
 
 ###### Bot Setup #######
@@ -24,43 +27,138 @@ with open('token.ini', 'r') as file:
 # Create the bot
 updater = Updater(token=BOT_TOKEN, use_context=True)
 
+# Configure game settings
+MINIMUM_PLAYERS = 2
+
 # Setup database when bot is started
 db = DBHelper()
+
+
+####### Added to group chat main code ############
+
+# added to new group handler code
+def new_member(update, context):
+    for member in update.message.new_chat_members:
+        if member.username == 'claire_game_test_bot':
+            context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=f'Hello, Welcome to Changi Airport MRT! Type /commands for a list of commands'
+            )
+
+#handler for being added to a group
+updater.dispatcher.add_handler(
+    MessageHandler(Filters.status_update.new_chat_members, new_member)
+)
+
+
+
+
+
 
 ######## Main Code ###########
 
 # Add /start code 
-# Only allows the game to start if it is /start in a group
+#### here it should start the PM with the people that join a group 
 def start(update, context):
+    context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f'Welcome to Durian King'
+    )
+
+
+# Add /start_game code 
+def start_game(update, context):
+
     chat_type = update.effective_message.chat.type
     chat_id = update.effective_message.chat.id
 
     if (chat_type == "private" or chat_type == "channel"):
-        context.bot.send_message(
-            chat_id=chat_id,
-            text=f'Please start the game in a group!'
-        )
-    elif (chat_type == "group" or chat_type == "supergroup"):  
-        # clear database
+            context.bot.send_message(
+                chat_id = chat_id ,
+                text = f'Please start the game in a group!'
+            )
+    elif(chat_type == "group" or chat_type == "supergroup"):
+        
+       # clear database
         print("start db setup")
         db.setup(chat_id)
         print("end db setup")
         db.delete_all_users(chat_id)
         print("clear database")
 
-        context.bot.send_message(
-            chat_id=chat_id,
-            text=f'You have started a game of Durian King. Eee, something stinks!'
-        )
+        #send them to a PM where we will set up!
+        keyboard_callback = [[InlineKeyboardButton("Join", callback_data='1')]]
+        reply_markup_callback = InlineKeyboardMarkup(keyboard_callback)
 
-        keyboard = [[InlineKeyboardButton("Join Game", callback_data="1")]]
-        reply_markup = InlineKeyboardMarkup(keyboard)
-
+         #send gif(?) and message upon starting game 
         context.bot.send_photo(
-            chat_id=chat_id,
-            photo="https://stickershop.line-scdn.net/stickershop/v1/product/1431176/LINEStorePC/main.png;compress=true",
-            reply_markup=reply_markup
+            chat_id=chat_id, 
+            photo='https://images.app.goo.gl/egrpX67bikkW438y8', 
+            caption = 'A new game has been started! Click join to join the game.',
+            reply_markup=reply_markup_callback
         )
+
+def randomiser():
+    if (True):
+       character = random.choice(list(characterDict.keys()))
+    else:
+       randomiser()
+    return character
+    #TO DO HERE ########################################################################
+
+#gameplay function
+def gamePlay (update, context, chat_id):
+
+    #look up the chat_id for each player that has joined
+    #send each of them a message with their randomly assigned character 
+    user_id_retrieve = db.get_userid_arr(chat_id)
+    for user in user_id_retrieve:
+        role = randomiser()
+        #update database to add the character
+        db.set_role(user, role, chat_id)
+
+        context.bot.send_message(
+            chat_id=user,
+            text=randomiser()
+        #TO DO HERE ########################################################################
+        )
+
+
+    duriansCount = 0
+    goodCount = 0
+    
+    #game running is true 
+    game = True
+    while game :
+
+        #game play:
+        #send message on group chat about start
+        #send tunnel message
+        #send command to each player for what they should do during tunnel
+        #react to responses from each player on the GC
+        #send message about the start of the station time and start timer and discussion time
+        #End discussion
+        #Send message to each person about voting
+        #React to votes from each player. Needs to add it up and see who is removed.
+
+        if(duriansCount == 0):
+            #call end game method
+            game = False
+        
+        elif(goodCount == 0):
+            #call end game method
+            game = False
+
+        elif(duriansCount == 1 and goodCount == 1):
+            #call end game method
+            game = False
+        
+        else:
+            #Send message about leaving and updated player list/Winner depending on if condition
+            #decrease the count and remove player from db 
+            print("game continues")
+
+
 
 #join game code 
 def join(update, context):
@@ -75,26 +173,58 @@ def join(update, context):
                 chat_id=chat_id,
                 text=f'Yay {query.from_user.first_name} has successfully joined the game!'
             ) 
+
+            # send or update list of players
+            usernames_list = db.get_usernames_list(chat_id)
+        
+            if (db.get_user_count(chat_id) == 1):
+                global player_list_msg
+                player_list_msg = context.bot.send_message(
+                    chat_id=chat_id,
+                    text=f'<b>Passenger List:</b>' + f'{usernames_list}',
+                    parse_mode=telegram.ParseMode.HTML
+                ).message_id
+                print("msg_id", player_list_msg)
+            else:
+                print("msg_id", player_list_msg)
+                context.bot.edit_message_text(
+                    chat_id=chat_id, 
+                    message_id=player_list_msg,
+                    text=f'<b>Passenger List:</b> ' + f'{usernames_list}',
+                    parse_mode=telegram.ParseMode.HTML
+                )
         else:
             context.bot.send_message(
                 chat_id=chat_id,
                 text=f'{query.from_user.first_name} is already in the game!'
             )
 
-        usernames_list = db.get_usernames_list(chat_id)
+        #send enough players message
+        if (db.get_user_count(chat_id) >= MINIMUM_PLAYERS): ### change number of players 
+            context.bot.send_message(
+                    chat_id=chat_id,
+                    text=f'Enough players. Game starting!'
+            )
 
-        context.bot.send_message(
-            chat_id=chat_id,
-            text=f'{usernames_list}'
-        )
+            #call gameplay function
+            gamePlay(update, context, chat_id)
+
     else: 
         print("error with join button")
-    
+
+
+
 ######### Handlers ###########
-#handler for /start
+#add a handler for /start
 updater.dispatcher.add_handler(
     CommandHandler('start', start)
 )
+
+#add handler for /start_game
+updater.dispatcher.add_handler(
+    CommandHandler('start_game', start_game)
+)
+
 
 #handler for join game button
 updater.dispatcher.add_handler(

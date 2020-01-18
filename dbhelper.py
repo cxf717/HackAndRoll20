@@ -70,7 +70,7 @@ class DBHelper:
         results = self.conn.execute(stmt)
         self.conn.commit()
         
-        usernames_list = "Players List:"
+        usernames_list = ""
         index = 1
         print("========== names =========")
         for user in results:
