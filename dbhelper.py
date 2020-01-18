@@ -45,16 +45,16 @@ class DBHelper:
     def get_users(self, chat_id):
         table_name = "users_" + str(chat_id)[1:]
         stmt = "SELECT * FROM " + table_name
-        results = self.conn.execute(stmt)
+        user_list = self.conn.execute(stmt)
         self.conn.commit()
         print("========== " + table_name + " =========")
-        for user in results:
+        for user in user_list:
             print("user_id:", user[0])
             print("username:", user[1])
             print("role:", user[2])
             print("status:", user[3])
         print("=============== end ==============")
-        return results
+        return user_list
 
     def get_user_count(self, chat_id):
         table_name = "users_" + str(chat_id)[1:]
@@ -67,6 +67,7 @@ class DBHelper:
         table_name = "users_" + str(chat_id)[1:]
         stmt = "SELECT username FROM " + table_name
         results = self.conn.execute(stmt)
+        self.conn.commit()
         
         usernames_list = "Players List:"
         index = 1
@@ -79,6 +80,17 @@ class DBHelper:
         print(usernames_list)
         print("=========== end ==========")
         return usernames_list
+
+    def get_userid_arr(self, chat_id):
+        table_name = "users_" + str(chat_id)[1:]
+        stmt = "SELECT user_id FROM " + table_name
+        results = self.conn.execute(stmt)
+        self.conn.commit()
+        
+        userid_arr = []
+        for user in results:
+            userid_arr.append(user[0])
+        return userid_arr
 
     def check_user(self, user_id, chat_id):
         table_name = "users_" + str(chat_id)[1:]
