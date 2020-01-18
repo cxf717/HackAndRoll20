@@ -44,10 +44,17 @@ def start(update, context):
             chat_id=update.effective_chat.id,
             text=f'You have started a game of Durian King. Eee, something stinks!'
         )
-        context.bot.send_message(
+
+        keyboard = [[InlineKeyboardButton("Join Game", callback_data="1")]]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+
+        context.bot.send_photo(
             chat_id=update.effective_chat.id,
-            text=f'Here is my second message.'
+            photo="https://stickershop.line-scdn.net/stickershop/v1/product/1431176/LINEStorePC/main.png;compress=true",
+            reply_markup=reply_markup
         )
+
+        
 
 
 
