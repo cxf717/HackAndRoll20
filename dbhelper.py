@@ -106,6 +106,7 @@ class DBHelper:
             #print(id)
         return userid_arr
 
+
     # check if user exists in database already
     # returns true if they exist and false if they don't
     def check_user(self, user_id, chat_id):
