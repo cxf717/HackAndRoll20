@@ -28,7 +28,7 @@ with open('token.ini', 'r') as file:
 updater = Updater(token=BOT_TOKEN, use_context=True)
 
 # Configure game settings
-MINIMUM_PLAYERS = 3
+MINIMUM_PLAYERS = 1
 
 # Setup database when bot is started
 db = DBHelper()
@@ -103,7 +103,7 @@ def randomiser(userid_arr):
     if (True):
        player_id = random.choice(userid_arr)
     return player_id
-    #TO DO HERE ########################################################################
+
 
 #gameplay function
 def gamePlay (update, context, chat_id):
@@ -126,43 +126,106 @@ def gamePlay (update, context, chat_id):
             chat_id=player_id,
             text='You\'re the ' + f'<b>{character}</b>!',
             parse_mode=telegram.ParseMode.HTML
-        #TO DO HERE ########################################################################
         )
 
-
+    #count the characters 
     duriansCount = 0
     goodCount = 0
     
     #game running is true 
     game = True
-    while game :
 
-        #game play:
+    while game is True :
+
+        def groupChatMessage(message):
+            context.bot.send_message(
+                chat_id=chat_id,
+                text=message,
+                parse_mode=telegram.ParseMode.HTML
+            )
+
+        def privateMessage(message):
+            player_id = db.get_userid_arr(chat_id)
+            for user in player_id:
+                context.bot.send_message(
+                    chat_id=user,
+                    text=message,
+                    parse_mode=telegram.ParseMode.HTML
+                )
+
         #send message on group chat about start
+        groupChatMessage("start message")
+
         #send tunnel message
+        groupChatMessage("tunnel message GC")
+
         #send command to each player for what they should do during tunnel
+        privateMessage("Private tunnel message")
+        command_keyboard = [['command']]
+        reply_markup_command = telegram.ReplyKeyboardMarkup(command_keyboard)
+        player_id = db.get_userid_arr(chat_id)
+        for user in player_id:
+            context.bot.send_message(
+                chat_id=user, 
+                text="Do your command", 
+                reply_markup=reply_markup_command)
+
         #react to responses from each player on the GC
+        groupChatMessage("React to tunnel player messages")
+
         #send message about the start of the station time and start timer and discussion time
+        groupChatMessage("Station time message. You have 120 seconds to discuss")
+        #timer here 
+
         #End discussion
+        groupChatMessage("Discussion time is up! Voting begins.")
+
         #Send message to each person about voting
+        privateMessage("voting")
+        custom_keyboard_vote = [['player one', 'player two']]
+        reply_markup_vote = telegram.ReplyKeyboardMarkup(custom_keyboard_vote)
+        player_id = db.get_userid_arr(chat_id)
+        for user in player_id:
+            context.bot.send_message(
+                chat_id=user, 
+                text="Please vote:", 
+                reply_markup=reply_markup_vote)
+
         #React to votes from each player. Needs to add it up and see who is removed.
+        groupChatMessage("result of voting:")
+        #use a counting datastructure?
 
         if(duriansCount == 0):
-            #call end game method
+            endGame(update, context, chat_id)
             game = False
         
         elif(goodCount == 0):
-            #call end game method
+            endGame(update, context, chat_id)
             game = False
 
         elif(duriansCount == 1 and goodCount == 1):
-            #call end game method
+            endGame(update, context, chat_id)
             game = False
         
         else:
             #Send message about leaving and updated player list/Winner depending on if condition
+            groupChatMessage("updated players")
+
             #decrease the count and remove player from db 
+
             print("game continues")
+
+
+def endGame(update, context, chat_id):
+
+    context.bot.send_message(
+        chat_id=chat_id,
+        text="game over message",
+        parse_mode=telegram.ParseMode.HTML
+    )
+
+    #clean DB?
+    #reset all variables
 
 
 

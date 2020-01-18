@@ -102,8 +102,8 @@ class DBHelper:
         for user in results:
             userid_arr.append(user[0])
         
-        for id in userid_arr:
-            print(id)
+        #for id in userid_arr:
+            #print(id)
         return userid_arr
 
     # check if user exists in database already
