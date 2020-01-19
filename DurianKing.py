@@ -1,5 +1,5 @@
 import telegram
-from telegram.ext import MessageHandler, Filters, Updater, CommandHandler, CallbackQueryHandler
+from telegram.ext import MessageHandler, Filters, Updater, CommandHandler, CallbackQueryHandler, ConversationHandler
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ChatAction, ParseMode
 from datetime import datetime
 import json
@@ -30,6 +30,8 @@ updater = Updater(token=BOT_TOKEN, use_context=True)
 
 # Configure game settings
 MINIMUM_PLAYERS = 3
+# conversation handler for multiple callback handlers and start
+JOIN, UPDATE_AFTER_VOTE = range(2)
 
 # Setup database when bot is started
 db = DBHelper()
@@ -88,7 +90,7 @@ def start_game(update, context):
         print("clear database")
 
         #send them to a PM where we will set up!
-        keyboard_callback = [[InlineKeyboardButton("Join", callback_data='1')]]
+        keyboard_callback = [[InlineKeyboardButton("Join", callback_data=str(JOIN))]]
         reply_markup_callback = InlineKeyboardMarkup(keyboard_callback)
 
         #send gif(?) and message upon starting game 
@@ -99,6 +101,8 @@ def start_game(update, context):
             caption = 'A new game has been started! Click join to join the game.',
             reply_markup=reply_markup_callback
         )
+        
+        return JOIN
 
 def randomiser(userid_arr):
     if (True):
@@ -133,11 +137,11 @@ def setCharacter (update, context, chat_id):
             parse_mode=telegram.ParseMode.HTML
         )
 
-        gamePlay(update, context, chat_id)
+    gamePlay(update, context, chat_id)
 
 
 def gamePlay(update, context, chat_id):
-    print("gamePLay running")
+    print("gameplay running")
 
     #count the characters 
     duriansCount = 0
@@ -161,103 +165,100 @@ def gamePlay(update, context, chat_id):
                 parse_mode=telegram.ParseMode.HTML
             )
 
-    while game:
+    # while game:
 
-        #send message on group chat about start
-        groupChatMessage("start message")
-
-
-
-        #send tunnel message
-        groupChatMessage("tunnel message GC")
-
-        #send command to each player for what they should do during tunnel
-        privateMessage("Private tunnel message")
-
-        command_keyboard = [['command']]
-        reply_markup_command = telegram.ReplyKeyboardMarkup(command_keyboard)
-        #then callback data 
-
-        player_id = db.get_userid_arr(chat_id)
-        for user in player_id:
-            #get message from their attached character object
-            message = "text"
-            context.bot.send_message(
-                chat_id=user, 
-                text=message, 
-                reply_markup=reply_markup_command)
-
-        #react to responses from each player on the GC
-        groupChatMessage("React to tunnel player messages")
+    #send message on group chat about start
+    groupChatMessage("start message")
 
 
 
+    #send tunnel message
+    groupChatMessage("tunnel message GC")
 
+    #send command to each player for what they should do during tunnel
+    privateMessage("Private tunnel message")
 
-        #send message about the start of the station time and start timer and discussion time
-        groupChatMessage("Station time message. You have 120 seconds to discuss")
-        #timer here 
+    command_keyboard = [['command']]
+    reply_markup_command = telegram.ReplyKeyboardMarkup(command_keyboard)
+    #then callback data 
 
-        #End discussion
-        groupChatMessage("Discussion time is up! Voting begins.")
+    player_id = db.get_userid_arr(chat_id)
+    for user in player_id:
+        #get message from their attached character object
+        message = "text"
+        context.bot.send_message(
+            chat_id=user, 
+            text=message, 
+            reply_markup=reply_markup_command)
+
+    #react to responses from each player on the GC
+    groupChatMessage("React to tunnel player messages")
 
 
 
 
 
+    #send message about the start of the station time and start timer and discussion time
+    groupChatMessage("Station time message. You have 120 seconds to discuss")
+    #timer here 
 
-        #Send message to each person about voting
-        privateMessage("Start voting!")
-
-        player_id_arr = db.get_userid_arr(chat_id)
-        for user_id in player_id_arr:
-
-            #return array not including self or dead 
-            vote_arr = db.get_vote_arr(user_id, chat_id)
-            
-            #needs to give different names based on who they can vote for 
-            #so other, in game, characters
-            keyboard_vote = [[InlineKeyboardButton(vote_arr[0], callback_data='1')],[InlineKeyboardButton(vote_arr[1], callback_data='2')]]
-            reply_markup_vote = InlineKeyboardMarkup(keyboard_vote)
-
-            context.bot.send_message(
-                chat_id=user_id, 
-                text="Please vote:", 
-                reply_markup=reply_markup_vote)
+    #End discussion
+    groupChatMessage("Discussion time is up! Voting begins.")
 
 
 
 
 
 
-        #React to votes from each player. Needs to add it up and see who is removed.
-        groupChatMessage("The person to be chased out is:")
-        #max statement command from the database 
+    #Send message to each person about voting
+    privateMessage("Start voting!")
 
+    player_id_arr = db.get_userid_arr(chat_id)
+    for user_id in player_id_arr:
 
-
-
-
-
-        if(duriansCount == 0):
-            endGame(update, context, chat_id)
-            game = False
+        #return array not including self or dead 
+        vote_arr = db.get_vote_arr(user_id, chat_id)
         
-        elif(goodCount == 0):
-            endGame(update, context, chat_id)
-            game = False
+        #needs to give different names based on who they can vote for 
+        #so other, in game, characters
+        keyboard_vote = [[InlineKeyboardButton(vote_arr[0], callback_data="voted " + vote_arr[0])],[InlineKeyboardButton(vote_arr[1], callback_data="voted " + vote_arr[1])]]
+        reply_markup_vote = InlineKeyboardMarkup(keyboard_vote)
 
-        elif(duriansCount == 1 and goodCount == 1):
-            endGame(update, context, chat_id)
-            game = False
+        context.bot.send_message(
+            chat_id=user_id, 
+            text="Please vote:", 
+            reply_markup=reply_markup_vote)
+
+
+
+        # #React to votes from each player. Needs to add it up and see who is removed.
+        # groupChatMessage("The person to be chased out is:")
+        # #max statement command from the database 
+
+
+
+
+
+
+        # if(duriansCount == 0):
+        #     endGame(update, context, chat_id)
+        #     game = False
         
-        else:
-            #Send message about leaving and updated player list/Winner depending on if condition
-            groupChatMessage("updated players")
+        # elif(goodCount == 0):
+        #     endGame(update, context, chat_id)
+        #     game = False
 
-            #decrease the count and remove player from db 
+        # elif(duriansCount == 1 and goodCount == 1):
+        #     endGame(update, context, chat_id)
+        #     game = False
+        
+        # else:
+        #     #Send message about leaving and updated player list/Winner depending on if condition
+        #     groupChatMessage("updated players")
 
-            print("game continues")
+        #     #decrease the count and remove player from db 
+
+        #     print("game continues")
 
 def endGame(update, context, chat_id):
 
@@ -277,10 +278,12 @@ def join(update, context):
     query = update.callback_query
     chat_id = update.effective_message.chat.id
 
-    if query.data == '1':
+    print(query.from_user.first_name, "triggered join")
+
+    if query.data == str(JOIN):
         if not db.check_user(query.from_user.id, chat_id):
             db.add_user(query.from_user.id, query.from_user.first_name, "None", 0, chat_id)
-            print("user successfully added")
+            print(query.from_user.first_name, "successfully added")
             context.bot.send_message(
                 chat_id=chat_id,
                 text=f'Yay {query.from_user.first_name} has successfully joined the game!'
@@ -327,29 +330,62 @@ def join(update, context):
             #call gameplay function
             setCharacter(update, context, chat_id)
 
+
     else: 
         print("error with join button")
 
+# update after voting button pressed
+def update_after_vote(update, context):
+    query = update.callback_query
+    chat_id = update.effective_message.chat.id
+    chat_message = query.data.substring[5:]
+
+    print("text voted:", chat_message)
+
+    if "voted" in query.data:
+        print("callback handler successful!")
+        ######### IMPLEMENT HERE
+        # add vote
+        # get max votes when everyone has voted (when the timer is up)
+        # reset votes
+        # call method that executes next part of game after a user has been voted out (or not)
+    return
 
 
-######### Handlers ###########
-#add a handler for /start
+
+####### Handlers #########
+
+# # add a handler for /start
 updater.dispatcher.add_handler(
     CommandHandler('start', start)
 )
 
-#add handler for /start_game
+# #add handler for /start_game
 updater.dispatcher.add_handler(
     CommandHandler('start_game', start_game)
 )
 
-
-#handler for join game button
+# # add handler for join
 updater.dispatcher.add_handler(
-    CallbackQueryHandler(join)
+    CallbackQueryHandler(join, pattern=str(JOIN))
 )
 
+# # add handler for updating game after vote
+updater.dispatcher.add_handler(
+    CallbackQueryHandler(update_after_vote, pattern=r'') # pattern for if contains
+)
 
+# conv_handler = ConversationHandler(
+#     entry_points=[CommandHandler('start_game', start_game)],
+#     states={
+#         JOIN: [CallbackQueryHandler(join)],
+#         UPDATE_AFTER_VOTE: [CallbackQueryHandler(update_after_vote)]
+#     },
+#     allow_reentry=True,
+#     fallbacks=[CommandHandler('start', start)]
+# )
+
+# updater.dispatcher.add_handler(conv_handler)
 
 
 ####### Running Bot #########

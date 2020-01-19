@@ -101,9 +101,6 @@ class DBHelper:
         userid_arr = []
         for user in results:
             userid_arr.append(user[0])
-        
-        for id in userid_arr:
-            print(id)
         return userid_arr
 
     # check if user exists in database already
@@ -135,6 +132,12 @@ class DBHelper:
     def delete_all_users(self, chat_id):
         table_name = "users_" + str(chat_id)[1:]
         stmt = "DELETE FROM " + table_name
+        self.conn.execute(stmt)
+        self.conn.commit()
+
+    def delete_table(self, chat_id):
+        table_name = "users_" + str(chat_id)[1:]
+        stmt = "DROP TABLE " + table_name
         self.conn.execute(stmt)
         self.conn.commit()
 
