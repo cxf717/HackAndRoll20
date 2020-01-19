@@ -10,7 +10,7 @@ class DBHelper:
     # create table of all the relevant info on users
     def setup(self, chat_id):
         table_name = "users_" + str(chat_id)[1:]
-        tblstmt = "CREATE TABLE IF NOT EXISTS " + table_name + " (user_id text NOT NULL, username text NOT NULL, role text, status int NOT NULL, votes int NOT NULL)"
+        tblstmt = "CREATE TABLE " + table_name + " (user_id text NOT NULL, username text NOT NULL, role text, status int NOT NULL, votes int NOT NULL)"
         self.conn.execute(tblstmt)
         self.conn.commit()
 
@@ -71,6 +71,7 @@ class DBHelper:
         stmt = "SELECT COUNT(*) FROM " + table_name
         count = self.conn.execute(stmt).fetchone()[0]
         self.conn.commit()
+        print("count:", count)
         return count
 
     # returns a string of the list of users' first_names
@@ -129,6 +130,20 @@ class DBHelper:
         else:
             return True
 
+    # get the role of user
+    def get_role(self, user_id, chat_id):
+        table_name = "users_" + str(chat_id)[1:]
+        stmt = "SELECT role FROM " + table_name + " WHERE user_id = (?)"
+        args = (user_id, )
+        result = self.conn.execute(stmt, args)
+        self.conn.commit()
+
+        role_arr = []
+        for each in result:
+            role_arr.append(each[0])
+
+        return role_arr
+
     def delete_all_users(self, chat_id):
         table_name = "users_" + str(chat_id)[1:]
         stmt = "DELETE FROM " + table_name
@@ -137,7 +152,7 @@ class DBHelper:
 
     def delete_table(self, chat_id):
         table_name = "users_" + str(chat_id)[1:]
-        stmt = "DROP TABLE " + table_name
+        stmt = "DROP TABLE IF EXISTS " + table_name
         self.conn.execute(stmt)
         self.conn.commit()
 
@@ -166,6 +181,18 @@ class DBHelper:
 
         return True
 
+    def get_vote_count_total(self, chat_id):
+        table_name = "users_" + str(chat_id)[1:]
+        stmt = "SELECT SUM(votes) FROM " + table_name
+        results = self.conn.execute(stmt)
+        self.conn.commit()
+
+        count = 0
+        for sum in results:
+            count = sum[0]
+        print("vote count:", count)
+        return count
+
     def get_max_vote(self, chat_id):
         table_name = "users_" + str(chat_id)[1:]
         stmt = "SELECT user_id FROM " + table_name + " WHERE votes = (SELECT MAX(votes) FROM " + table_name + ")"
@@ -181,7 +208,7 @@ class DBHelper:
             return user_id_arr[0]
         else:
             # if there is more than 1 player with the same max number of votes, return 0
-            return 0
+            return "nobody"
 
     # resets all votes back to 0
     def reset_votes(self, chat_id):
