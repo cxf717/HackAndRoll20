@@ -92,6 +92,20 @@ class DBHelper:
         print("=========== end ==========")
         return usernames_list
 
+    # returns an array of all the first names except a player's own
+    def get_vote_arr(self, user_id, chat_id):
+        table_name = "users_" + str(chat_id)[1:]
+        stmt = "SELECT * FROM " + table_name
+        results = self.conn.execute(stmt)
+        self.conn.commit()
+
+        vote_arr = []
+        for user in results:
+            if user[0] != user_id:
+                vote_arr.append(user[1])
+        
+        return vote_arr
+
     def get_userid_arr(self, chat_id):
         table_name = "users_" + str(chat_id)[1:]
         stmt = "SELECT user_id FROM " + table_name
