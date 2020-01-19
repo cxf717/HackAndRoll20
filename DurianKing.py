@@ -9,6 +9,7 @@ import logging
 import random
 from dbhelper import DBHelper
 from characters import characterDict
+import PassengerClass
 
 
 
@@ -103,14 +104,14 @@ def randomiser(userid_arr):
     if (True):
        player_id = random.choice(userid_arr)
     return player_id
-    #TO DO HERE ########################################################################
+
 
 #gameplay function
-def gamePlay (update, context, chat_id):
+def setCharacter (update, context, chat_id):
 
     #have a set number of roles and randomly assign each player to one
     #send each of them a message with their randomly assigned character 
-    role_arr = ["Durian King", "Old Auntie", "Stomper"] ### hardcoded currently for testing please change
+    role_arr = ["Durian King", "Old Auntie", "Pretend Sleeper"] ### hardcoded currently for testing please change
     for character in role_arr:
         player_id = randomiser(db.get_userid_arr(chat_id))
         # check if player has already been assigned a role
@@ -119,50 +120,155 @@ def gamePlay (update, context, chat_id):
             player_id = randomiser(db.get_userid_arr(chat_id))
             user_info = db.get_user_info(player_id, chat_id)
 
+        #CREATE OBJECT AND ASSIGN THAT TO PLAYER ALSO
+
         #update database to add the character
         db.set_role(player_id, character, chat_id)
+        # print user details in console for testing
+        db.get_users
 
         context.bot.send_message(
             chat_id=player_id,
             text='You\'re the ' + f'<b>{character}</b>!',
             parse_mode=telegram.ParseMode.HTML
-        #TO DO HERE ########################################################################
         )
 
+        gamePlay(update, context, chat_id)
 
+
+def gamePlay(update, context, chat_id):
+    print("gamePLay running")
+
+    #count the characters 
     duriansCount = 0
     goodCount = 0
-    
-    #game running is true 
-    game = True
-    while game :
 
-        #game play:
+    game = True
+
+    def groupChatMessage(message):
+            context.bot.send_message(
+                chat_id=chat_id,
+                text=message,
+                parse_mode=telegram.ParseMode.HTML
+            )
+
+    def privateMessage(message):
+        player_id = db.get_userid_arr(chat_id)
+        for user in player_id:
+            context.bot.send_message(
+                chat_id=user,
+                text=message,
+                parse_mode=telegram.ParseMode.HTML
+            )
+
+    while game:
+
         #send message on group chat about start
+        groupChatMessage("start message")
+
+
+
         #send tunnel message
+        groupChatMessage("tunnel message GC")
+
         #send command to each player for what they should do during tunnel
+        privateMessage("Private tunnel message")
+
+        command_keyboard = [['command']]
+        reply_markup_command = telegram.ReplyKeyboardMarkup(command_keyboard)
+        #then callback data 
+
+        player_id = db.get_userid_arr(chat_id)
+        for user in player_id:
+            #get message from their attached character object
+            message = "text"
+            context.bot.send_message(
+                chat_id=user, 
+                text=message, 
+                reply_markup=reply_markup_command)
+
         #react to responses from each player on the GC
+        groupChatMessage("React to tunnel player messages")
+
+
+
+
+
         #send message about the start of the station time and start timer and discussion time
+        groupChatMessage("Station time message. You have 120 seconds to discuss")
+        #timer here 
+
         #End discussion
+        groupChatMessage("Discussion time is up! Voting begins.")
+
+
+
+
+
+
         #Send message to each person about voting
+        privateMessage("Start voting!")
+
+        player_id_arr = db.get_userid_arr(chat_id)
+        for user_id in player_id_arr:
+
+            #return array not including self or dead 
+            vote_arr = db.get_vote_arr(user_id, chat_id)
+            
+            #needs to give different names based on who they can vote for 
+            #so other, in game, characters
+            keyboard_vote = [[InlineKeyboardButton(vote_arr[0], callback_data='1')],[InlineKeyboardButton(vote_arr[1], callback_data='2')]]
+            reply_markup_vote = InlineKeyboardMarkup(keyboard_vote)
+
+            context.bot.send_message(
+                chat_id=user_id, 
+                text="Please vote:", 
+                reply_markup=reply_markup_vote)
+
+
+
+
+
+
         #React to votes from each player. Needs to add it up and see who is removed.
+        groupChatMessage("The person to be chased out is:")
+        #max statement command from the database 
+
+
+
+
+
 
         if(duriansCount == 0):
-            #call end game method
+            endGame(update, context, chat_id)
             game = False
         
         elif(goodCount == 0):
-            #call end game method
+            endGame(update, context, chat_id)
             game = False
 
         elif(duriansCount == 1 and goodCount == 1):
-            #call end game method
+            endGame(update, context, chat_id)
             game = False
         
         else:
             #Send message about leaving and updated player list/Winner depending on if condition
+            groupChatMessage("updated players")
+
             #decrease the count and remove player from db 
+
             print("game continues")
+
+def endGame(update, context, chat_id):
+
+    context.bot.send_message(
+        chat_id=chat_id,
+        text="game over message",
+        parse_mode=telegram.ParseMode.HTML
+    )
+
+    #clean DB?
+    #reset all variables
 
 
 
@@ -219,7 +325,7 @@ def join(update, context):
             )
 
             #call gameplay function
-            gamePlay(update, context, chat_id)
+            setCharacter(update, context, chat_id)
 
     else: 
         print("error with join button")

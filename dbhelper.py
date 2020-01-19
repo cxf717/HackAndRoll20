@@ -10,13 +10,13 @@ class DBHelper:
     # create table of all the relevant info on users
     def setup(self, chat_id):
         table_name = "users_" + str(chat_id)[1:]
-        tblstmt = "CREATE TABLE IF NOT EXISTS " + table_name + " (user_id text NOT NULL, username text NOT NULL, role text, status int NOT NULL)"
+        tblstmt = "CREATE TABLE IF NOT EXISTS " + table_name + " (user_id text NOT NULL, username text NOT NULL, role text, status int NOT NULL, votes int NOT NULL)"
         self.conn.execute(tblstmt)
         self.conn.commit()
 
     def add_user(self, user_id, username, role, status, chat_id):
         table_name = "users_" + str(chat_id)[1:]
-        stmt = "INSERT INTO  " + table_name + " (user_id, username, role, status) VALUES (?,?,?,?)"
+        stmt = "INSERT INTO  " + table_name + " (user_id, username, role, status, votes) VALUES (?,?,?,?,0)"
         args = (user_id, username, role, status, )
         self.conn.execute(stmt, args)
         self.conn.commit()
@@ -92,20 +92,6 @@ class DBHelper:
         print("=========== end ==========")
         return usernames_list
 
-    # returns an array of all the first names except a player's own
-    def get_vote_arr(self, user_id, chat_id):
-        table_name = "users_" + str(chat_id)[1:]
-        stmt = "SELECT * FROM " + table_name
-        results = self.conn.execute(stmt)
-        self.conn.commit()
-
-        vote_arr = []
-        for user in results:
-            if user[0] != user_id:
-                vote_arr.append(user[1])
-        
-        return vote_arr
-
     def get_userid_arr(self, chat_id):
         table_name = "users_" + str(chat_id)[1:]
         stmt = "SELECT user_id FROM " + table_name
@@ -151,3 +137,19 @@ class DBHelper:
         stmt = "DELETE FROM " + table_name
         self.conn.execute(stmt)
         self.conn.commit()
+
+    ############### functions for voting ################
+
+    # returns an array of all the first names except a player's own
+    def get_vote_arr(self, user_id, chat_id):
+        table_name = "users_" + str(chat_id)[1:]
+        stmt = "SELECT * FROM " + table_name
+        results = self.conn.execute(stmt)
+        self.conn.commit()
+
+        vote_arr = []
+        for user in results:
+            if user[0] != user_id and user[3] == 0:
+                vote_arr.append(user[1])
+        print("vote arr:", vote_arr)
+        return vote_arr
