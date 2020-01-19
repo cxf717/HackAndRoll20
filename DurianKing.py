@@ -31,6 +31,13 @@ updater = Updater(token=BOT_TOKEN, use_context=True)
 # Configure game settings
 MINIMUM_PLAYERS = 1
 
+databaseDictionary = {
+
+    "Durian King" : "Durian is banned on board the MRT but you heck care. Decide who to chase off the MRT at the next station. The passenger with the majority vote will get chased off. If there is no majority vote, no one gets chased off.",
+    "Old Auntie" :  "You are just an everyday Singaporean taking the mrt so you no skills lorh. You win after chasing the Durian family out of the MRT. Easy Peasy, Lemon Squeezy!"
+
+}
+
 # Setup database when bot is started
 db = DBHelper()
 
@@ -170,8 +177,10 @@ def gamePlay(update, context, chat_id):
 
         player_id = db.get_userid_arr(chat_id)
         for user in player_id:
-            #get message from their attached character object
-            message = "Your ability is: INSERT"
+            #get message from the db
+            role = db.get_role(user, chat_id)
+            print(role[0])
+            message = databaseDictionary.get(role[0])
             context.bot.send_message(
                 chat_id=user, 
                 text=message, )
@@ -236,8 +245,9 @@ def gamePlay(update, context, chat_id):
 
 
 
+        playername = "name"
         #React to votes from each player. Needs to add it up and see who is removed.
-        groupChatMessage("The passengers cast votes liao, amid doubts and suspicions, player has been chased off the MRT. (player) was the (role).")
+        groupChatMessage("The passengers cast votes liao, amid doubts and suspicions," +playername+ "has been chased off the MRT.")
         #max statement command from the database 
 
 

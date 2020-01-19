@@ -133,6 +133,20 @@ class DBHelper:
         else:
             return True
 
+    # get the role of user
+    def get_role(self, user_id, chat_id):
+        table_name = "users_" + str(chat_id)[1:]
+        stmt = "SELECT role FROM " + table_name + " WHERE user_id = (?)"
+        args = (user_id, )
+        result = self.conn.execute(stmt, args)
+        self.conn.commit()
+
+        role_arr = []
+        for each in result:
+            role_arr.append(each[0])
+
+        return role_arr
+
     def delete_all_users(self, chat_id):
         table_name = "users_" + str(chat_id)[1:]
         stmt = "DELETE FROM " + table_name
