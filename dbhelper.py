@@ -157,12 +157,14 @@ class DBHelper:
         print("vote arr:", vote_arr)
         return vote_arr
 
-    def add_vote(self, user_id, chat_id):
+    def add_vote(self, username, chat_id):
         table_name = "users_" + str(chat_id)[1:]
-        stmt = "UPDATE " + table_name + " SET votes = votes + 1 WHERE user_id = (?)"
-        args = (user_id, )
+        stmt = "UPDATE " + table_name + " SET votes = votes + 1 WHERE username = (?)"
+        args = (username, )
         self.conn.execute(stmt, args)
         self.conn.commit()
+
+        return True
 
     def get_max_vote(self, chat_id):
         table_name = "users_" + str(chat_id)[1:]

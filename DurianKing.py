@@ -82,7 +82,8 @@ def start_game(update, context):
             )
     elif(chat_type == "group" or chat_type == "supergroup"):
         
-       # clear database
+        # clear database
+        db.delete_table(chat_id)
         print("start db setup")
         db.setup(chat_id)
         print("end db setup")
@@ -141,6 +142,9 @@ def setCharacter (update, context, chat_id):
 
 
 def gamePlay(update, context, chat_id):
+
+
+
     print("gameplay running")
 
     #count the characters 
@@ -221,7 +225,7 @@ def gamePlay(update, context, chat_id):
         
         #needs to give different names based on who they can vote for 
         #so other, in game, characters
-        keyboard_vote = [[InlineKeyboardButton(vote_arr[0], callback_data="voted " + vote_arr[0])],[InlineKeyboardButton(vote_arr[1], callback_data="voted " + vote_arr[1])]]
+        keyboard_vote = [[InlineKeyboardButton(vote_arr[0], callback_data="voted," + str(chat_id) + "," + vote_arr[0])],[InlineKeyboardButton(vote_arr[1], callback_data="voted," + str(chat_id) + "," + vote_arr[1])]]
         reply_markup_vote = InlineKeyboardMarkup(keyboard_vote)
 
         context.bot.send_message(
@@ -337,18 +341,29 @@ def join(update, context):
 # update after voting button pressed
 def update_after_vote(update, context):
     query = update.callback_query
-    chat_id = update.effective_message.chat.id
-    chat_message = query.data.substring[5:]
+    query_arr = query.data.split(',')
+    username = query_arr[2]
+    chat_id = query_arr[1]
 
-    print("text voted:", chat_message)
+    print("text voted:", username)
+    print(query_arr[0])
 
-    if "voted" in query.data:
+    if query_arr[0] == "voted":
         print("callback handler successful!")
-        ######### IMPLEMENT HERE
+        ######### IMPLEMENT HERE ###########
         # add vote
+        if db.add_vote(username, chat_id):
+            context.bot.send_message(
+                    chat_id=update.effective_message.chat.id,
+                    text='Successfully voted for ' + f'{username}!'
+            )
+            db.get_users(chat_id)
         # get max votes when everyone has voted (when the timer is up)
+
         # reset votes
+
         # call method that executes next part of game after a user has been voted out (or not)
+
     return
 
 
@@ -372,7 +387,7 @@ updater.dispatcher.add_handler(
 
 # # add handler for updating game after vote
 updater.dispatcher.add_handler(
-    CallbackQueryHandler(update_after_vote, pattern=r'') # pattern for if contains
+    CallbackQueryHandler(update_after_vote, pattern=r'\bvoted\b') # pattern for if contains
 )
 
 # conv_handler = ConversationHandler(
