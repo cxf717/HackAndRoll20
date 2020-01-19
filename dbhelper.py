@@ -71,6 +71,7 @@ class DBHelper:
         stmt = "SELECT COUNT(*) FROM " + table_name
         count = self.conn.execute(stmt).fetchone()[0]
         self.conn.commit()
+        print("count:", count)
         return count
 
     # returns a string of the list of users' first_names
@@ -180,6 +181,18 @@ class DBHelper:
 
         return True
 
+    def get_vote_count_total(self, chat_id):
+        table_name = "users_" + str(chat_id)[1:]
+        stmt = "SELECT SUM(votes) FROM " + table_name
+        results = self.conn.execute(stmt)
+        self.conn.commit()
+
+        count = 0
+        for sum in results:
+            count = sum[0]
+        print("vote count:", count)
+        return count
+
     def get_max_vote(self, chat_id):
         table_name = "users_" + str(chat_id)[1:]
         stmt = "SELECT user_id FROM " + table_name + " WHERE votes = (SELECT MAX(votes) FROM " + table_name + ")"
@@ -195,7 +208,7 @@ class DBHelper:
             return user_id_arr[0]
         else:
             # if there is more than 1 player with the same max number of votes, return 0
-            return 0
+            return "nobody"
 
     # resets all votes back to 0
     def reset_votes(self, chat_id):

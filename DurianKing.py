@@ -178,7 +178,7 @@ def gamePlay(update, context, chat_id):
 
 
         #send tunnel message
-        groupChatMessage("Next station, station. The service will end at Your attention please, we are now passing through a tunnel, please do not be alarmed by the change in environment. Also, please be reminded that durians are not allowed on board trains. Meanwhile...an overwhelming durian smell permeates the train... Passengers you have 90 seconds to take action (if any)!")
+        groupChatMessage("Next station, Clementi. Your attention please, we are now passing through a tunnel, please do not be alarmed by the change in environment. Also, please be reminded that durians are not allowed on board trains. Meanwhile...an overwhelming durian smell permeates the train... Passengers you have 90 seconds to take action (if any)!")
 
 
         player_id = db.get_userid_arr(chat_id)
@@ -195,7 +195,7 @@ def gamePlay(update, context, chat_id):
         #send command to each player for what they should do during tunnel
         privateMessage("Type /execute to perform your special ability")
 
-        time.sleep(15)
+        time.sleep(10)
 
         def execute (update, context):
             context.bot.send_message(
@@ -215,7 +215,7 @@ def gamePlay(update, context, chat_id):
         #send message about the start of the station time and start timer and discussion time
         groupChatMessage("The train will stop at station for seconds. Passenger you have 120 seconds to discuss who might have brought durians on board the train before voting commences.")
         
-        time.sleep(15)
+        time.sleep(10)
 
         #End discussion
         groupChatMessage("The train is departing soon. Passengers who you want to chase off the MRT??? Passengers you have 60 seconds to vote!")
@@ -225,6 +225,8 @@ def gamePlay(update, context, chat_id):
 
         #Send message to each person about voting
         privateMessage("Start voting!")
+        global all_voted
+        all_voted = False
 
         player_id_arr = db.get_userid_arr(chat_id)
         for user_id in player_id_arr:
@@ -242,15 +244,11 @@ def gamePlay(update, context, chat_id):
                 text="Please vote:", 
                 reply_markup=reply_markup_vote)
 
-
-
-
-
-
-        playername = "name"
-        #React to votes from each player. Needs to add it up and see who is removed.
-        groupChatMessage("The passengers cast votes liao, amid doubts and suspicions," +playername+ "has been chased off the MRT.")
-        #max statement command from the database 
+        
+        if all_voted:
+            #React to votes from each player. Needs to add it up and see who is removed.
+            groupChatMessage("The passengers cast votes liao, amid doubts and suspicions," + voted_username + "has been chased off the MRT.")
+            #max statement command from the database 
 
 
 
@@ -360,16 +358,28 @@ def update_after_vote(update, context):
         ######### IMPLEMENT HERE ###########
         # add vote
         if db.add_vote(username, chat_id):
-            context.bot.send_message(
-                    chat_id=update.effective_message.chat.id,
-                    text='Successfully voted for ' + f'{username}!'
+            context.bot.edit_message_text(
+                chat_id=update.effective_message.chat.id, 
+                message_id=update.effective_message.message_id,
+                text='Successfully voted for ' + f'<b>{username}</b>!',
+                parse_mode=telegram.ParseMode.HTML
             )
-            db.get_users(chat_id)
+
         # get max votes when everyone has voted (when the timer is up)
+        if db.get_vote_count_total(chat_id) < db.get_user_count(chat_id):
+            print("Only " + str(db.get_vote_count_total(chat_id)) + " players have voted")
+        else:
+            print("All voted")
+            global all_voted
+            global voted_username
+            voted_username = db.get_max_vote(chat_id)
+            all_voted = True
 
-        # reset votes
+            # reset votes
+            db.reset_votes(chat_id)
+            print("Reset votes!")
 
-        # call method that executes next part of game after a user has been voted out (or not)
+            # implement execute_after_vote(update, context, chat_id, voted_username)
 
     return
 
