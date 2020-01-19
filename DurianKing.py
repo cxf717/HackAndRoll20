@@ -10,6 +10,7 @@ import random
 from dbhelper import DBHelper
 from characters import characterDict
 import PassengerClass
+import time
 
 
 
@@ -29,7 +30,7 @@ with open('token.ini', 'r') as file:
 updater = Updater(token=BOT_TOKEN, use_context=True)
 
 # Configure game settings
-MINIMUM_PLAYERS = 1
+MINIMUM_PLAYERS = 3
 
 databaseDictionary = {
 
@@ -118,7 +119,7 @@ def setCharacter (update, context, chat_id):
 
     #have a set number of roles and randomly assign each player to one
     #send each of them a message with their randomly assigned character 
-    role_arr = ["Durian King", "Old Auntie"] ### hardcoded currently for testing please change
+    role_arr = ["Durian King", "Old Auntie", "Pretend Sleeper"] ### hardcoded currently for testing please change
     for character in role_arr:
         player_id = randomiser(db.get_userid_arr(chat_id))
         # check if player has already been assigned a role
@@ -138,7 +139,7 @@ def setCharacter (update, context, chat_id):
             parse_mode=telegram.ParseMode.HTML
         )
 
-        gamePlay(update, context, chat_id)
+    gamePlay(update, context, chat_id)
 
 
 def gamePlay(update, context, chat_id):
@@ -175,6 +176,7 @@ def gamePlay(update, context, chat_id):
         #send tunnel message
         groupChatMessage("Next station, station. The service will end at Your attention please, we are now passing through a tunnel, please do not be alarmed by the change in environment. Also, please be reminded that durians are not allowed on board trains. Meanwhile...an overwhelming durian smell permeates the train... Passengers you have 90 seconds to take action (if any)!")
 
+
         player_id = db.get_userid_arr(chat_id)
         for user in player_id:
             #get message from the db
@@ -188,6 +190,8 @@ def gamePlay(update, context, chat_id):
 
         #send command to each player for what they should do during tunnel
         privateMessage("Type /execute to perform your special ability")
+
+        time.sleep(15)
 
         def execute (update, context):
             context.bot.send_message(
@@ -206,12 +210,11 @@ def gamePlay(update, context, chat_id):
 
         #send message about the start of the station time and start timer and discussion time
         groupChatMessage("The train will stop at station for seconds. Passenger you have 120 seconds to discuss who might have brought durians on board the train before voting commences.")
-        #timer here 
+        
+        time.sleep(15)
 
         #End discussion
-        groupChatMessage("The train is departing soon. Passengers who you want to chase off the MRT??? Passengers you have  seconds to vote!")
-
-
+        groupChatMessage("The train is departing soon. Passengers who you want to chase off the MRT??? Passengers you have 60 seconds to vote!")
 
 
 
@@ -219,16 +222,13 @@ def gamePlay(update, context, chat_id):
         #Send message to each person about voting
         privateMessage("Who will you vote for?")
 
+
+
         player_id = db.get_userid_arr(chat_id)
         for user_id in player_id:
 
             #return array not including self or dead 
-            vote_arr = []
-            results = db.get_users(chat_id)
-            for user in results:
-                if user[0] != player_id or user[3] == 0:
-                    vote_arr.append(user[1])
-            print(vote_arr)
+            vote_arr = db.get_vote_arr(user_id, chat_id)
 
             #needs to give different names based on who they can vote for 
             #so other, in game, characters
@@ -252,20 +252,21 @@ def gamePlay(update, context, chat_id):
 
 
 
-
-
-
         if(duriansCount == 0):
+            print("here")
             endGame(update, context, chat_id)
             game = False
+            break
         
         elif(goodCount == 0):
             endGame(update, context, chat_id)
             game = False
+            break
 
         elif(duriansCount == 1 and goodCount == 1):
             endGame(update, context, chat_id)
             game = False
+            break
         
         else:
             #Send message about leaving and updated player list/Winner depending on if condition
@@ -279,12 +280,12 @@ def endGame(update, context, chat_id):
 
     context.bot.send_message(
         chat_id=chat_id,
-        text="game over message",
+        text="Thank you for riding on the MRT.",
         parse_mode=telegram.ParseMode.HTML
     )
+    exit
 
-    #clean DB?
-    #reset all variables
+    
 
 
 
@@ -358,7 +359,7 @@ updater.dispatcher.add_handler(
 
 #handler for join game button
 updater.dispatcher.add_handler(
-    CallbackQueryHandler(join)
+    CallbackQueryHandler(join,)
 )
 
 

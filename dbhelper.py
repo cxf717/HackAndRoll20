@@ -152,3 +152,51 @@ class DBHelper:
         stmt = "DELETE FROM " + table_name
         self.conn.execute(stmt)
         self.conn.commit()
+
+
+############### functions for voting ################
+
+    # returns an array of all the first names except a player's own
+    def get_vote_arr(self, user_id, chat_id):
+        table_name = "users_" + str(chat_id)[1:]
+        stmt = "SELECT * FROM " + table_name
+        results = self.conn.execute(stmt)
+        self.conn.commit()
+
+        vote_arr = []
+        for user in results:
+            if user[0] != user_id and user[3] == 0:
+                vote_arr.append(user[1])
+        print("vote arr:", vote_arr)
+        return vote_arr
+
+    def add_vote(self, user_id, chat_id):
+        table_name = "users_" + str(chat_id)[1:]
+        stmt = "UPDATE " + table_name + " SET votes = votes + 1 WHERE user_id = (?)"
+        args = (user_id, )
+        self.conn.execute(stmt, args)
+        self.conn.commit()
+
+    def get_max_vote(self, chat_id):
+        table_name = "users_" + str(chat_id)[1:]
+        stmt = "SELECT user_id FROM " + table_name + " WHERE votes = (SELECT MAX(votes) FROM " + table_name + ")"
+        results = self.conn.execute(stmt)
+        self.conn.commit()
+
+        count = 0
+        user_id_arr = []
+        for user_id in results:
+            count+= 1
+            user_id_arr.append(user_id)
+        if count == 1:
+            return user_id_arr[0]
+        else:
+            # if there is more than 1 player with the same max number of votes, return 0
+            return 0
+
+    # resets all votes back to 0
+    def reset_votes(self, chat_id):
+        table_name = "users_" + str(chat_id)[1:]
+        stmt = "UPDATE " + table_name + " SET votes = 0"
+        self.conn.execute(stmt)
+        self.conn.commit()
