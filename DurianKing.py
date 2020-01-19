@@ -30,7 +30,7 @@ with open('token.ini', 'r') as file:
 updater = Updater(token=BOT_TOKEN, use_context=True)
 
 # Configure game settings
-MINIMUM_PLAYERS = 3
+MINIMUM_PLAYERS = 2
 # conversation handler for multiple callback handlers and start
 JOIN, UPDATE_AFTER_VOTE = range(2)
 
@@ -50,10 +50,12 @@ db = DBHelper()
 # added to new group handler code
 def new_member(update, context):
     for member in update.message.new_chat_members:
-        if member.username == 'claire_game_test_bot':
+        if member.username == 'claire_game_test_bot' or member.username == 'sarah_durian_testbot':
+            db.delete_all_users(update.effective_message.chat.id)
             context.bot.send_message(
                 chat_id=update.effective_chat.id,
-                text=f'"Welcome to the sunny island of Singapore! Hi! I am Durian King the most  infamous famous fruit in Singapore. But do you know that bringing me on board the MRT is illegal? But recently my overpowering smell has been detected on some carriages... Lets catch and punish all the law breakers together! Disclaimer: All views expressed in this game are the views of the owner. Please do not take this seriously"'
+                text=f'"Welcome to the sunny island of Singapore! Hi! I am Durian King the most <strike>infamous</strike> famous fruit in Singapore. But do you know that bringing me on board the MRT is illegal? But recently my overpowering smell has been detected on some carriages... Lets catch and punish all the law breakers together! Disclaimer: All views expressed in this game are the views of the owner. Please do not take this seriously"',
+                parse_mode=telegram.ParseMode.HTML
             )
 
 #handler for being added to a group
@@ -123,7 +125,7 @@ def setCharacter (update, context, chat_id):
 
     #have a set number of roles and randomly assign each player to one
     #send each of them a message with their randomly assigned character 
-    role_arr = ["Durian King", "Old Auntie", "Pretend Sleeper"] ### hardcoded currently for testing please change
+    role_arr = ["Durian King", "Old Auntie"] ### hardcoded currently for testing please change
     for character in role_arr:
         player_id = randomiser(db.get_userid_arr(chat_id))
         # check if player has already been assigned a role
@@ -236,7 +238,15 @@ def gamePlay(update, context, chat_id):
             
             #needs to give different names based on who they can vote for 
             #so other, in game, characters
-            keyboard_vote = [[InlineKeyboardButton(vote_arr[0], callback_data="voted," + str(chat_id) + "," + vote_arr[0])],[InlineKeyboardButton(vote_arr[1], callback_data="voted," + str(chat_id) + "," + vote_arr[1])]]
+            keyboard_vote = []
+
+            i = 0
+            while i < db.get_user_count(chat_id) - 1: 
+                button = [InlineKeyboardButton(vote_arr[i], callback_data="voted," + str(chat_id) + "," + vote_arr[i])]
+                keyboard_vote.append(button)
+                i +=1
+            print("keyboard vote:", keyboard_vote)
+            # keyboard_vote = [[InlineKeyboardButton(vote_arr[0], callback_data="voted," + str(chat_id) + "," + vote_arr[0])],[InlineKeyboardButton(vote_arr[1], callback_data="voted," + str(chat_id) + "," + vote_arr[1])]]
             reply_markup_vote = InlineKeyboardMarkup(keyboard_vote)
 
             context.bot.send_message(
