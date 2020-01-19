@@ -10,13 +10,13 @@ class DBHelper:
     # create table of all the relevant info on users
     def setup(self, chat_id):
         table_name = "users_" + str(chat_id)[1:]
-        tblstmt = "CREATE TABLE IF NOT EXISTS " + table_name + " (user_id text NOT NULL, username text NOT NULL, role text, status int NOT NULL)"
+        tblstmt = "CREATE TABLE " + table_name + " (user_id text NOT NULL, username text NOT NULL, role text, status int NOT NULL, votes int NOT NULL)"
         self.conn.execute(tblstmt)
         self.conn.commit()
 
     def add_user(self, user_id, username, role, status, chat_id):
         table_name = "users_" + str(chat_id)[1:]
-        stmt = "INSERT INTO  " + table_name + " (user_id, username, role, status) VALUES (?,?,?,?)"
+        stmt = "INSERT INTO  " + table_name + " (user_id, username, role, status, votes) VALUES (?,?,?,?,0)"
         args = (user_id, username, role, status, )
         self.conn.execute(stmt, args)
         self.conn.commit()
@@ -101,11 +101,7 @@ class DBHelper:
         userid_arr = []
         for user in results:
             userid_arr.append(user[0])
-        
-        #for id in userid_arr:
-            #print(id)
         return userid_arr
-
 
     # check if user exists in database already
     # returns true if they exist and false if they don't
@@ -153,8 +149,13 @@ class DBHelper:
         self.conn.execute(stmt)
         self.conn.commit()
 
+    def delete_table(self, chat_id):
+        table_name = "users_" + str(chat_id)[1:]
+        stmt = "DROP TABLE IF EXISTS " + table_name
+        self.conn.execute(stmt)
+        self.conn.commit()
 
-############### functions for voting ################
+    ############### functions for voting ################
 
     # returns an array of all the first names except a player's own
     def get_vote_arr(self, user_id, chat_id):
@@ -170,12 +171,14 @@ class DBHelper:
         print("vote arr:", vote_arr)
         return vote_arr
 
-    def add_vote(self, user_id, chat_id):
+    def add_vote(self, username, chat_id):
         table_name = "users_" + str(chat_id)[1:]
-        stmt = "UPDATE " + table_name + " SET votes = votes + 1 WHERE user_id = (?)"
-        args = (user_id, )
+        stmt = "UPDATE " + table_name + " SET votes = votes + 1 WHERE username = (?)"
+        args = (username, )
         self.conn.execute(stmt, args)
         self.conn.commit()
+
+        return True
 
     def get_max_vote(self, chat_id):
         table_name = "users_" + str(chat_id)[1:]

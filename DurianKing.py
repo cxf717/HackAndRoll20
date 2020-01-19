@@ -31,6 +31,8 @@ updater = Updater(token=BOT_TOKEN, use_context=True)
 
 # Configure game settings
 MINIMUM_PLAYERS = 3
+# conversation handler for multiple callback handlers and start
+JOIN, UPDATE_AFTER_VOTE = range(2)
 
 databaseDictionary = {
 
@@ -88,7 +90,9 @@ def start_game(update, context):
             )
     elif(chat_type == "group" or chat_type == "supergroup"):
         
-       # clear database
+        # clear database
+        print("delete db")
+        db.delete_table(chat_id)
         print("start db setup")
         db.setup(chat_id)
         print("end db setup")
@@ -96,7 +100,7 @@ def start_game(update, context):
         print("clear database")
 
         #send them to a PM where we will set up!
-        keyboard_callback = [[InlineKeyboardButton("Join", callback_data='1')]]
+        keyboard_callback = [[InlineKeyboardButton("Join", callback_data=str(JOIN))]]
         reply_markup_callback = InlineKeyboardMarkup(keyboard_callback)
 
         #send gif(?) and message upon starting game 
@@ -220,19 +224,17 @@ def gamePlay(update, context, chat_id):
 
 
         #Send message to each person about voting
-        privateMessage("Who will you vote for?")
+        privateMessage("Start voting!")
 
-
-
-        player_id = db.get_userid_arr(chat_id)
-        for user_id in player_id:
+        player_id_arr = db.get_userid_arr(chat_id)
+        for user_id in player_id_arr:
 
             #return array not including self or dead 
             vote_arr = db.get_vote_arr(user_id, chat_id)
-
+            
             #needs to give different names based on who they can vote for 
             #so other, in game, characters
-            keyboard_vote = [[InlineKeyboardButton(vote_arr[0], callback_data='1')],[InlineKeyboardButton(vote_arr[1], callback_data='2')]]
+            keyboard_vote = [[InlineKeyboardButton(vote_arr[0], callback_data="voted," + str(chat_id) + "," + vote_arr[0])],[InlineKeyboardButton(vote_arr[1], callback_data="voted," + str(chat_id) + "," + vote_arr[1])]]
             reply_markup_vote = InlineKeyboardMarkup(keyboard_vote)
 
             context.bot.send_message(
@@ -294,7 +296,7 @@ def join(update, context):
     query = update.callback_query
     chat_id = update.effective_message.chat.id
 
-    if query.data == '1':
+    if query.data == str(JOIN):
         if not db.check_user(query.from_user.id, chat_id):
             db.add_user(query.from_user.id, query.from_user.first_name, "None", 0, chat_id)
             print("user successfully added")
@@ -343,7 +345,33 @@ def join(update, context):
     else: 
         print("error with join button")
 
+# update after voting button pressed
+def update_after_vote(update, context):
+    query = update.callback_query
+    query_arr = query.data.split(',')
+    username = query_arr[2]
+    chat_id = query_arr[1]
 
+    print("text voted:", username)
+    print(query_arr[0])
+
+    if query_arr[0] == "voted":
+        print("callback handler successful!")
+        ######### IMPLEMENT HERE ###########
+        # add vote
+        if db.add_vote(username, chat_id):
+            context.bot.send_message(
+                    chat_id=update.effective_message.chat.id,
+                    text='Successfully voted for ' + f'{username}!'
+            )
+            db.get_users(chat_id)
+        # get max votes when everyone has voted (when the timer is up)
+
+        # reset votes
+
+        # call method that executes next part of game after a user has been voted out (or not)
+
+    return
 
 ######### Handlers ###########
 #add a handler for /start
@@ -357,9 +385,14 @@ updater.dispatcher.add_handler(
 )
 
 
-#handler for join game button
+# # add handler for join
 updater.dispatcher.add_handler(
-    CallbackQueryHandler(join,)
+    CallbackQueryHandler(join, pattern=str(JOIN))
+)
+
+# # add handler for updating game after vote
+updater.dispatcher.add_handler(
+    CallbackQueryHandler(update_after_vote, pattern=r'\bvoted\b') # pattern for if contains
 )
 
 
